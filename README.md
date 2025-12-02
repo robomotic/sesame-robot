@@ -3,27 +3,30 @@
 
 **Greetings, from your new best friend.**
 
-Sesame is an innovative and accessible Open-Source robotics project meticulously crafted for makers and engineers of all skill levels. From absolute beginners to seasoned professionals, Sesame offers a dynamic platform designed to fuel innovation and encourage hands-on learning.
+Sesame is an accessible Open-Source robotics project based on ESP32 and PCA9685 servo driver. This project is designed for makers and engineers of all skill levels. From absolute beginners to seasoned professionals, Sesame offers a dynamic platform designed to start working with walking robots.
 
-This repository contains the CAD files for the body and the base firmware for the Arduino-based controller.
+This repository contains the CAD files for the body and the base firmware for the ESP32-based controller.
+
+> [!WARNING]
+> This Repository is under Construction! Details are subject to change.
 
 ## Features
 
-*   **4-Legged Design:** Uses 8 servo motors (2 per leg) to achieve roughly 2.5 degrees of freedom per limb.
+*   **4-Legged Design:** Uses 8 servo motors (2 per leg) to achieve roughly 8 total degrees of freedom.
 *   **Emotive Display:** Features a 128x64 OLED screen acting as a reactive face that syncs with movement.
 *   **Fully Printable:** Designed entirely for 3D printing in PLA with minimal supports.
-*   **Serial CLI:** Control the robot and trigger animations via a Serial Command Line Interface.
+*   **Serial CLI:** Control the robot and trigger animations via a Serial Command Line Interface or the WIP web UI.
 *   **Pre-programmed Emotes:** Includes animations for Walking, Waving, Dancing, Swimming, Pointing, Resting, and Standing.
 
 ## Hardware Requirements
 
 To build a Sesame, you will need the following core components:
 
-*   **Microcontroller:** Arduino-compatible AVR board (Uno/Nano/Mega).
+*   **Microcontroller:** ESP32 Development Board with WiFi connectivity.
 *   **Actuators:** 8x MG90 Micro Metal Gear Servo Motors.
 *   **Driver:** PCA9685 16-Channel PWM/Servo Driver.
 *   **Display:** 0.96" I2C OLED Display (SSD1306 driver, 128x64).
-*   **Power:** 5V Power Supply suitable for 8 servos (approx 2-3A).
+*   **Power:** 5V Power Supply suitable for 8 servos (or 3x AAA battery pack).
 *   **Body:** 3D Printed Parts (Files available in the `/CAD` directory).
 
 ## Fabrication
@@ -38,6 +41,7 @@ Sesame is designed to be printed in **PLA**. Most parts are designed to be print
 
 The firmware provided in this repository controls the servo kinematics and the OLED face updates.
 
+> [!NOTE]
 > **Note from the Creator:** I am a hardware and design specialist, not a software wizard. This firmware works and provides a great platform, but it is basic. The community is highly encouraged to contribute, refactor, and improve the code logic.
 
 ### Dependencies
@@ -77,6 +81,7 @@ Once the robot is powered on:
 ## Customizing Faces
 
 The faces are stored as byte arrays in `PROGMEM` within the firmware file. You can create your own faces using any standard 128x64 bitmap converter (or MS Paint exported to C-array).
+_I know this is dumb, currently working on a better way of doing this_
 
 1.  Create your image (128x64 pixels, monochrome).
 2.  Convert image to a hex array.
@@ -88,7 +93,7 @@ The faces are stored as byte arrays in `PROGMEM` within the firmware file. You c
 If you do not have a 3D printer or prefer to get all the hardware in one box, limited pre-orders for full Sesame Build Kits are available. These kits include all the proper servos, drivers, fasteners, and printed parts to build your own Sesame.
 
 *   **Shipping:** Q1 2026
-*   **Store Link:** [Link to your store here]
+*   **Store Link:** [TBA]
 
 ## Contributing
 
@@ -100,4 +105,4 @@ This robot is a platform for building new features and ideas. Since the current 
 
 ---
 
-*Created by [Dorian Todd]. Watch the build videos on [https://www.youtube.com/@DorianToddYT/](https://www.youtube.com/@DorianToddYT/).*
+*Created by [Dorian Todd]. See my work and contact at https://www.doriantodd.com/
