@@ -4,7 +4,18 @@ Complete wiring guides for the Sesame Robot.
 
 ---
 
+## Choosing a Wiring Approach
+
+The project supports two wiring strategies that suit different build constraints:
+
+- **S2 Mini / hand wiring:** Uses an ESP32-S2 Mini, loose headers, and point-to-point wiring. It is the lowest-cost option and easy to source, but it demands patience to keep the harness tidy and leaves less room for mistakes.
+- **Sesame Distro Board / ESP32 DevKit:** Uses the custom distro PCB stacked on an ESP32-DevKitC-32E. It front-loads the work into soldering headers and the buck converter but dramatically simplifies routing, labeling, and maintenance once assembled.
+
+Pick the approach that matches your component availability and comfort with managing wire bundles; the remainder of this guide dives into both workflows.
+
 ## How to wire the S2 Mini / Hand Wiring
+
+The S2 Mini method is a traditional protoboard build. Consult the [S2 Mini wiring diagram](s2-mini-wiring-guide.png) while reading this section; it captures every motor, sensor, OLED, and button lead even if the photos only show a subset of the connections. Expect a high connection count, so plan wire lengths and colors before soldering to avoid confusion later.
 
 ### Prep
 
@@ -32,6 +43,8 @@ You can now cut eight equal-length wires for data connections.
 
 ![proto-data-lines](assets/proto-datalines.png)
 
+Alongside the eight motor data leads, the diagram also calls out the OLED connections that branch from the microcontroller.
+
 ### Packing Electronics
 
 When packing electronics into the frame, it's difficult with the hand wiring setup because there are a lot of stray wires. My advice is to work slowly and methodically:
@@ -56,13 +69,15 @@ When packing electronics into the frame, it's difficult with the hand wiring set
 
 ---
 
-## How to wire the Sesame Distro Board / ESP32 DevKit
+## How to wire the Sesame Distro Board / ESP32-DevKitC-32E
 
 ### Overview
 
 > [!IMPORTANT]  
 > The distro board is mounted on top of the ESP32 devkit, like a hat. 
+
 This option provides a cleaner, more organized wiring solution.
+Consult the [distro-board wiring diagram](distro-board-wiring-guide.png) for exact connection locations.
 
 ### Component Installation
 
@@ -97,11 +112,7 @@ A buck converter takes any voltage (5V-12V) and drops it to a stable 5V for the 
 
 The Sesame Distro Board is a custom PCB designed specifically for this project. It mounts on top of a ESP32-DevKitC-32E.
 
-**PCBway Sponsorship**
-
-This project was sponsored by [PCBway](https://www.pcbway.com/), who manufactured the custom distro boards. PCBway offers high-quality PCB fabrication services with fast turnaround times and excellent customer support. You can order your own Sesame Distro Boards by uploading the Gerber files (found in the hardware section) to their website.
-
-If you're building your own Sesame Robot, PCBway is a great option for getting professional-quality distro boards manufactured at reasonable prices.
+More information is avalible in the [PCB](../../hardware/pcb/README.md) section of the documentation.
 
 ---
 
