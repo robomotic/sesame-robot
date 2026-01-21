@@ -31,7 +31,7 @@ Here's what a complete set looks like:
 **Phase 1 checklist**
 - [ ] All plastic parts printed, and cleaned up.
 - [ ] MG90 servos tested quickly on a servo tester or Arduino to catch DOA units.
-- [ ] Power plan decided (USB-C PD vs. battery + buck) and matching connectors sourced.
+- [ ] Power plan decided (USB-C PD vs. battery + buck) and matching connectors sourced (2× 10440 Li-ion cells in a 2× AAA holder fit the stock battery cavity).
 - [ ] Consumables stocked: solder, flux, heat-shrink, zip ties, M2 hardware.
 
 ## Phase 2: Electronics and Wiring
@@ -214,7 +214,7 @@ Finish by driving the provided servo screw (or an M2 machine screw if you need e
 
 <img src="assets/secure-top-cover.png" alt="secure-top-cover" width="70%">
 
-6. Drop the battery into the cavity (if using one) before closing the bottom panel. Unique battery shapes can be accommodated. See [hardware/README.md](../../hardware/README.md) for CAD tips. Tethered-only builds can skip the pack.
+6. Drop the battery into the cavity (if using one) before closing the bottom panel. A 2× AAA holder with 10440 Li-ion cells fits the stock slot cleanly; remove the cells to recharge. Unique battery shapes can be accommodated. See [hardware/README.md](../../hardware/README.md) for CAD tips. Tethered-only builds can skip the pack.
 
 ## Bottom Cover
 

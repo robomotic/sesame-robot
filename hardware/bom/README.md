@@ -44,6 +44,9 @@ Every part required to assemble Sesame is cataloged here. Pick the wiring strate
 | Item | Qty | Notes | Amazon |
 | --- | --- | --- | --- |
 | 3S 450 mAh LiPo with XT30 | 1 | Recommended wireless pack; ensure high-discharge rating | [link](https://www.amazon.com/s?k=3s+450mah+lipo+xt30) |
+| 2× 10440 Li-ion cells + 2× AAA holder | 1 set | 2S pack (~7.4 V nominal) that fits the chassis battery slot; use a buck converter | [link](https://www.amazon.com/s?k=2x+aaa+battery+holder+with+leads) |
+| 10440 Li-ion cells (350–400 mAh typical) | 2 | Standard 10×44 mm Li-ion cells; buy spares | [link](https://www.amazon.com/s?k=10440+li-ion+cell+350mah) |
+| 2-slot 10440 Li-ion charger | 1 | Charge cells outside the holder; avoid in-holder charging unless the holder is designed for it | [link](https://www.amazon.com/s?k=10440+li-ion+charger+2+slot) |
 | Alternative: 3× 10440 Li-ion cell pack | 1 | If LiPo sourcing is tricky; retain 5–12 V input requirement | [link](https://www.amazon.com/s?k=10440+li-ion+pack) |
 | XT30 female pigtail | 1 | Interface battery to switch/PCB without cutting stock leads | [link](https://www.amazon.com/s?k=xt30+female+pigtail) |
 | JST RCY female pigtail | 1 | Use if your battery ships with JST RCY instead of XT30 | [link](https://www.amazon.com/s?k=jst+rcy+female+pigtail) |
@@ -84,3 +87,5 @@ Print the 11-part part set outlined in [printing/README.md](../printing/README.m
 - Sesame needs at least 5 V at 3 A available at the rails. USB-A chargers rarely meet that spec; stick with USB-C PD or the buck-converted battery input.
 - When battery powering the S2 Mini harness, route the pack through the rocker switch and buck converter before it touches the rails, mirroring the schematic in [docs/wiring-guide/README.md](../../docs/wiring-guide/README.md).
 - **Never cut the factory battery connector off the pack.** Instead, create adapter pigtails using XT30 or JST RCY leads so the pack remains chargeable.
+- A 2× 10440 Li-ion + 2× AAA holder pack fits the stock battery cavity and works well with the existing power switch + buck converter.
+- Charge 10440 cells in a proper Li-ion charger outside the holder unless the holder explicitly supports charging.

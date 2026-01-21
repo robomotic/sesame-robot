@@ -44,7 +44,7 @@ Follow these steps to build your own Sesame Robot:
 Check the **[Bill of Materials (BOM)](hardware/bom/README.md)** for a complete list of required electronics and hardware.
 *   Microcontroller: ESP32 S2 Mini
 *   Actuators: 8x MG90 Servos
-*   Power: 5V 3A source
+*   Power: 5V 3A source (USB-C PD or battery + buck; see BOM for the 2× 10440 Li-ion + 2× AAA holder option)
 
 ### 2. Print Parts 
 Download the STLs and follow the **[Printing Guide](hardware/printing/README.md)**.

@@ -98,6 +98,7 @@ A buck converter takes any voltage (5V-12V) and drops it to a stable 5V for the 
 **If using a battery:**
 1. Make sure to solder the buck converter enable pads
 2. The buck converter is **required** for battery operation
+3. 2× 10440 Li-ion cells in a 2× AAA holder (2S, ~7.4 V nominal) work well with the buck and fit the chassis battery slot
 
 **Alternative power options:**
 - If you're using a benchtop supply or have another regulated 5V source
@@ -111,6 +112,10 @@ A buck converter takes any voltage (5V-12V) and drops it to a stable 5V for the 
 1. Get a female XT30 or JST RCY connector (matching your battery)
 2. Wire it to two wires that lead to the power terminal
 3. This allows you to safely connect and disconnect the battery
+
+**Note on 2× AAA holders with 10440 Li-ion cells:**
+- Treat this as a 2S Li-ion pack; wire the holder leads through the switch and buck converter.
+- Recharge the 10440 cells outside the holder using a proper Li-ion charger unless the holder explicitly supports charging.
 
 ### Sourcing the Distro Board
 
