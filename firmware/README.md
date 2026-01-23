@@ -5,6 +5,56 @@ This document provides technical information on the firmware architecture, contr
 >[!NOTE]
 > The firmware is now organized into a modular structure with a main entry point and specialized header files for bitmaps, movement, and web assets. This makes customization much easier and the codebase cleaner.
 
+## How to Flash the Firmware
+
+### Prerequisites
+1. **Arduino IDE** (version 2.0 or higher recommended)
+2. **ESP32 Board Support**: Install via Arduino IDE's Board Manager
+   - Open Arduino IDE
+   - Go to **File → Preferences**
+   - Add to "Additional Board Manager URLs": `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
+   - Go to **Tools → Board → Boards Manager**
+   - Search for "ESP32" and install "ESP32 by Espressif Systems" (v2.0.0 or higher)
+3. **Required Libraries** (install via Library Manager):
+   - `ESP32Servo`
+   - `Adafruit SSD1306`
+   - `Adafruit GFX Library`
+
+### Flashing Steps
+1. **Connect your board** via USB to your computer
+2. **Open the firmware**:
+   - Open [sesame-firmware-main.ino](sesame-firmware-main.ino) in Arduino IDE
+   - Make sure you have it in a folder with the same name.
+   - Also include all of the .h header files.
+3. **Select your board**:
+   - Go to **Tools → Board**
+   - For Lolin S2 Mini: Select "LOLIN S2 Mini"
+   - For Sesame Distro Board: Select "ESP32 Dev Module"
+4. **Configure board settings** (if using Lolin S2 Mini):
+   - **Upload Speed**: 921600
+   - **USB CDC On Boot**: "Enabled"
+   - **Partition Scheme**: "Default 4MB with spiffs"
+5. **Select the correct port**:
+   - Go to **Tools → Port** and select your ESP32's COM port
+6. **Choose your board configuration** in the code:
+   - Open [sesame-firmware-main.ino](sesame-firmware-main.ino)
+   - Find the pin configuration section (around line 55-65)
+   - Comment/uncomment the appropriate `servoPins` and `I2C_` defines for your board type
+7. **Upload the firmware**:
+   - Click the **Upload** button (→) in Arduino IDE
+   - Wait for compilation and upload to complete
+8. **Test the connection**:
+   - Open Serial Monitor (**Tools → Serial Monitor**, set baud rate to 115200)
+   - Reset the board - you should see startup messages
+   - Connect to the "Sesame-Controller" WiFi network (password: `12345678`)
+   - Navigate to any website in your browser to access the control interface
+
+### Troubleshooting
+- **Upload fails**: Try holding the BOOT button while uploading, or try a different USB cable
+- **Port not found**: Install the appropriate USB drivers (CP210x for S2 Mini, CH340 for some ESP32 boards)
+- **Compilation errors**: Verify all required libraries are installed
+- **Robot not moving**: Check power supply and servo connections; increase `motorCurrentDelay` in web settings if brownouts occur
+
 ## Firmware Architecture
 
 The firmware is split into several key files to keep the logic organized and assets easy to manage:
