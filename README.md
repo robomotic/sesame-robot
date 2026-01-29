@@ -53,6 +53,19 @@ An advanced suspension system based on the LEGO 6.5L Soft Spring Grey component 
 - Adjustable stiffness
 - Superior obstacle traversal
 
+#### 3. L4 Drilled Shock Harness (Experimental)
+A modified version of the original L4 foot joint, drilled to accommodate the LEGO shock absorber spring. This design integrates the suspension directly into the foot structure.
+
+![l4-shock-harness](hardware/printing/assets/feet-joint-l4-iso-shock-harness.png)
+
+![l4-shock-leg](hardware/printing/assets/feet-joint-l4-iso-shock-leg.png)
+
+**Characteristics:**
+- Based on original L4 foot joint design
+- Direct LEGO spring integration
+- More compact form factor
+- ⚠️ **Note:** Bottom section requires structural reinforcement - design refinement in progress
+
 ---
 
 ## Features
