@@ -20,6 +20,41 @@ To build a sesame robot, you will need basic soldering skills, $50-60 in hardwar
 This repository contains the CAD design files, STL files, build and wiring guides, and the base/expanded firmware for the ESP32-based controller. 
 There is also some included debugging firmware that may be helpful in getting your Sesame up and running.
 
+## ⚡ Fork Notice: Leg & Foot Variations Specialist
+
+**This is a specialized fork repository dedicated to developing and documenting different leg and foot variations for the Sesame robot.**
+
+Explore alternative leg designs optimized for different locomotion characteristics and environmental conditions. All variations are 3D-printable and compatible with the standard Sesame platform. Find the STL files and assembly guides in `hardware/printing/`.
+
+### Leg Variation Types
+
+#### 1. Soft TPU Foot (Dampening)
+A compliant, shock-absorbing foot design using flexible TPU material. Perfect for reducing impact forces and improving grip on smooth surfaces.
+
+![soft-tpu-foot](hardware/printing/assets/feet-joint-l3-iso-tpu.jpeg)
+
+**Characteristics:**
+- Excellent vibration dampening
+- Enhanced grip on smooth surfaces
+- Quieter operation
+- Reduced stress on servo joints
+
+#### 2. Shock Suspension with LEGO Integration
+An advanced suspension system based on the LEGO 6.5L Soft Spring Grey component (Part #731c08). Provides spring-like shock absorption through mechanical linkage.
+
+![lego-6.5l-soft-spring](hardware/printing/assets/lego-6.5l-soft-spring-grey-731c08.png)
+
+![lego-suspension](hardware/printing/assets/feet-joint-l3-nylon-front.jpeg)
+
+**Characteristics:**
+- LEGO Part: 731c08 - 6.5L Soft Spring Grey
+- Modular suspension design
+- LEGO-compatible connectors
+- Adjustable stiffness
+- Superior obstacle traversal
+
+---
+
 ## Features
 
 *   **Quadruped Design:** Uses 8 servo motors (2 per leg) to achieve roughly 8 total degrees of freedom.
@@ -107,6 +142,12 @@ I am excited to announce that, after popular demand, Sesame Complete Build Kits 
 That's right, your little robot companion just got even easier to build. Each kit includes all the components you need to build a full Sesame Robot. With the included detailed instructions, guides, and resources, this kit is perfect for both seasoned Makers and beginners. Click the image below to learn more.
 
 <a href="https://www.doriantodd.com/sesame/kit"><img src="https://github.com/user-attachments/assets/6d438981-2714-408d-a250-fda64f22c4d1" width="70%" alt="kits-availible"></a>
+
+---
+
+## Credits
+
+A special thanks to **Jason** for his invaluable contributions to 3D printing and design optimization. His expertise and dedication have greatly enhanced the quality and manufacturability of the Sesame robot platform.
 
 ---
 
