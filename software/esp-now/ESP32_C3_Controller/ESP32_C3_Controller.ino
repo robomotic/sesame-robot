@@ -6,9 +6,10 @@
 
 #include <esp_now.h>
 #include <WiFi.h>
+#include <esp_wifi.h>
 
 // MAC Address of the AtomS3 Lite (you'll need to update this)
-uint8_t atomS3Address[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+uint8_t atomS3Address[] = {0xDC, 0x54, 0x75, 0xC8, 0x43, 0x00};
 
 // WiFi channel configuration (1-13)
 // Choose a channel different from your WiFi router to avoid interference
@@ -48,8 +49,8 @@ uint32_t maxLatency_us = 0;
 uint32_t minLatency_us = 999999;
 unsigned long lastProcessTime = 0;
 
-// Callback when data is received
-void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
+// Callback when data is received (ESP32 core 3.x uses esp_now_recv_info_t)
+void OnDataRecv(const esp_now_recv_info_t *recv_info, const uint8_t *data, int data_len) {
   uint32_t receiveTime_us = micros();
   
   memcpy(&incomingSensorData, data, sizeof(incomingSensorData));
@@ -91,8 +92,8 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   }
 }
 
-// Callback when data is sent
-void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+// Callback when data is sent (ESP32 core 3.x uses wifi_tx_info_t)
+void OnDataSent(const wifi_tx_info_t *info, esp_now_send_status_t status) {
   // Optional: track send success/failure
 }
 

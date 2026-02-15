@@ -7,17 +7,11 @@
 
 #include <esp_now.h>
 #include <WiFi.h>
-#include <FastLED.h>
-
-// AtomS3 Lite pin definitions
-#define BUTTON_PIN 41  // Built-in button
-#define LED_PIN 35     // Built-in RGB LED (WS2812)
-#define NUM_LEDS 1
-
-CRGB leds[NUM_LEDS];
+#include <esp_wifi.h>
+#include <M5AtomS3.h>
 
 // MAC Address of the ESP32-C3 Mini (you'll need to update this after running C3 sketch)
-uint8_t c3MiniAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+uint8_t c3MiniAddress[] = {0xAC, 0xA7, 0x04, 0xD3, 0x3D, 0x34};
 
 // WiFi channel configuration (1-13)
 // MUST MATCH the channel set on the C3 Mini!
@@ -62,11 +56,8 @@ uint32_t lastSentTimestamp = 0;
 unsigned long lastSendTime = 0;
 const int SEND_INTERVAL_MS = 5;  // Adjust this to test different rates (5ms = 200Hz)
 
-// Button and transmission control
+// Transmission control
 bool transmitting = false;
-bool lastButtonState = HIGH;
-unsigned long lastDebounceTime = 0;
-const unsigned long debounceDelay = 50;
 
 // LED status modes
 enum LEDStatus {
@@ -81,8 +72,8 @@ LEDStatus currentStatus = LED_INIT;
 unsigned long lastLEDUpdate = 0;
 unsigned long lastReceiveTime = 0;
 
-// Callback when data is received
-void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
+// Callback when data is received (ESP32 core 3.x uses esp_now_recv_info_t)
+void OnDataRecv(const esp_now_recv_info_t *recv_info, const uint8_t *data, int data_len) {
   uint32_t receiveTime_us = micros();
   lastReceiveTime = millis();  // Track for LED status
   
@@ -99,7 +90,7 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   }
 }
 
-// Callback when data is sent
+// Callback when data is sent (signature depends on ESP32 core version)
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   if (status == ESP_NOW_SEND_SUCCESS) {
     // Success is already counted in packetsSent
@@ -122,18 +113,19 @@ void generateSensorData() {
   lastSentTimestamp = outgoingSensorData.timestamp_us;
 }
 
-// Update RGB LED based on status
+// Update RGB LED based on status using M5AtomS3 library
 void updateLED() {
   static uint8_t brightness = 0;
   static bool increasing = true;
+  uint32_t color = 0x000000;  // Default black
   
   switch (currentStatus) {
     case LED_INIT:
       // Cyan - initializing
-      leds[0] = CRGB(0, 255, 255);
+      color = 0x00FFFF;
       break;
       
-    case LED_READY:
+    case LED_READY: {
       // Blue breathing - ready but not transmitting
       if (increasing) {
         brightness += 5;
@@ -142,86 +134,83 @@ void updateLED() {
         brightness -= 5;
         if (brightness <= 50) increasing = true;
       }
-      leds[0] = CRGB(0, 0, brightness);
+      // Create blue with breathing effect
+      color = brightness;  // Blue channel only
       break;
+    }
       
     case LED_TRANSMITTING:
       // Green with yellow pulse when receiving
       if (millis() - lastReceiveTime < 100) {
         // Yellow pulse for 100ms after receiving data
-        leds[0] = CRGB(255, 255, 0);
+        color = 0xFFFF00;
       } else {
         // Solid green when transmitting
-        leds[0] = CRGB(0, 255, 0);
+        color = 0x00FF00;
       }
       break;
       
     case LED_RECEIVING:
       // Yellow - receiving (momentary)
-      leds[0] = CRGB(255, 255, 0);
+      color = 0xFFFF00;
       break;
       
     case LED_ERROR:
       // Red blinking - error
-      leds[0] = (millis() / 500) % 2 ? CRGB(255, 0, 0) : CRGB(0, 0, 0);
+      if ((millis() / 500) % 2) {
+        color = 0xFF0000;
+      } else {
+        color = 0x000000;
+      }
       break;
   }
   
-  FastLED.show();
+  AtomS3.dis.drawpix(color);
+  AtomS3.update();
 }
 
-// Handle button press
+// Handle button press using M5AtomS3 library
 void checkButton() {
-  bool buttonState = digitalRead(BUTTON_PIN);
-  
-  // Check if button state changed
-  if (buttonState != lastButtonState) {
-    lastDebounceTime = millis();
-  }
-  
-  // If enough time has passed and button is stable
-  if ((millis() - lastDebounceTime) > debounceDelay) {
-    // If button was pressed (HIGH to LOW transition on AtomS3)
-    if (buttonState == LOW && lastButtonState == HIGH) {
-      transmitting = !transmitting;
-      
-      if (transmitting) {
-        Serial.println("\n>>> TRANSMISSION STARTED <<<\n");
-        currentStatus = LED_TRANSMITTING;
-      } else {
-        Serial.println("\n>>> TRANSMISSION STOPPED <<<\n");
-        currentStatus = LED_READY;
-      }
+  // M5AtomS3 handles button reading automatically with AtomS3.update()
+  // BtnA is the built-in button
+  if (AtomS3.BtnA.wasPressed()) {
+    transmitting = !transmitting;
+    
+    if (transmitting) {
+      Serial.println("\n>>> TRANSMISSION STARTED <<<\n");
+      currentStatus = LED_TRANSMITTING;
+    } else {
+      Serial.println("\n>>> TRANSMISSION STOPPED <<<\n");
+      currentStatus = LED_READY;
     }
   }
-  
-  lastButtonState = buttonState;
 }
 
 void setup() {
+  // Initialize M5AtomS3 (true enables display)
+  AtomS3.begin(true);
+  AtomS3.dis.setBrightness(100);
+  
   Serial.begin(115200);
   delay(1000);
   
   Serial.println("\n=== AtomS3 Lite Sensor ===");
   
-  // Initialize button
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-  
-  // Initialize RGB LED
-  FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, NUM_LEDS);
-  FastLED.setBrightness(50);
+  // Set initial LED status
   currentStatus = LED_INIT;
   updateLED();
   
-  // Set device as a Wi-Fi Station
+  // Set device as a Wi-Fi Station and start it
   WiFi.mode(WIFI_STA);
+  WiFi.begin();  // Start WiFi to initialize MAC address
+  delay(100);    // Give WiFi time to initialize
   
-  // Set WiFi channel to match C3 Mini and avoid interference
-  esp_wifi_set_channel(ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE);
-  
-  // Print MAC address
+  // Print MAC address BEFORE setting channel
   Serial.print("MAC Address: ");
   Serial.println(WiFi.macAddress());
+  
+  // Now set WiFi channel to match C3 Mini and avoid interference
+  esp_wifi_set_channel(ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE);
   Serial.printf("WiFi Channel: %d\n", ESPNOW_CHANNEL);
   Serial.println("Copy this MAC address to the C3 Mini sketch!");
   
@@ -266,6 +255,9 @@ void setup() {
 }
 
 void loop() {
+  // Update M5AtomS3 (handles button reading)
+  AtomS3.update();
+  
   // Check button state
   checkButton();
   
