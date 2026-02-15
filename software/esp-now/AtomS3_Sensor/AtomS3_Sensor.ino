@@ -54,7 +54,7 @@ uint32_t lastSentTimestamp = 0;
 
 // Send rate control
 unsigned long lastSendTime = 0;
-const int SEND_INTERVAL_MS = 5;  // Adjust this to test different rates (5ms = 200Hz)
+const int SEND_INTERVAL_MS = 1;  // Adjust this to test different rates (5ms = 200Hz)
 
 // Transmission control
 bool transmitting = false;

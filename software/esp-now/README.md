@@ -126,16 +126,28 @@ Typical ESP-NOW performance:
 - **Range**: 100-200m line of sight, 10-50m with obstacles
 
 ### Observed Test Results
+
+#### Standard Mode (5ms Interval)
 During a standard test run with default settings:
-- **Send Rate**: ~185 packets/sec (at 5ms interval)
+- **Send Rate**: ~185 packets/sec
 - **Receive Rate**: ~91 packets/sec (at 10ms processing loop)
-- **Success Rate**: 100.0% (0 failures over thousands of packets)
+- **Success Rate**: 100.0%
 - **Latencies**:
   - **Average Round-Trip**: 2.85 - 2.92 ms
   - **Minimum Round-Trip**: 0.81 - 2.77 ms
   - **Maximum Round-Trip**: 3.99 - 5.09 ms
 
-These results confirm that the link is highly stable and capable of supporting high-frequency control loops (200Hz sensor data / 100Hz command response) with sub-3ms round-trip latency.
+#### High-Performance Mode (1ms Interval)
+Pushing the limits with `SEND_INTERVAL_MS = 1`:
+- **Send Rate**: ~478 packets/sec
+- **Receive Rate**: ~94 packets/sec
+- **Success Rate**: 100.0%
+- **Latencies**:
+  - **Average Round-Trip**: **0.80 - 1.10 ms**
+  - **Minimum Round-Trip**: 0.03 - 0.59 ms
+  - **Maximum Round-Trip**: 2.08 - 3.13 ms
+
+These results confirm that the link is highly stable and capable of supporting extremely high-frequency control loops with sub-1ms round-trip latency when optimized.
 
 ## Troubleshooting
 
