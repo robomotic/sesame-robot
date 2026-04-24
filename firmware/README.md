@@ -11,12 +11,14 @@ This document provides technical information on the firmware architecture, contr
 - [Network Configuration](#network-configuration--connectivity)
 - [API Reference](#api-reference)
   - [Legacy Web Endpoints](#legacy-web-endpoints)
+    - [Servo Trims](#servo-trims)
   - [JSON API](#json-api-recommended-for-network-clients)
   - [Python Examples](#python-api-example)
   - [JavaScript Examples](#nodejsjavascript-example)
 - [Advanced Integration Examples](#advanced-integration-examples)
   - [Voice Assistant Integration](#voice-assistant-integration)
   - [Home Automation](#home-automation-integration)
+- [Servo Calibration & Trims](#servo-calibration--trims)
 - [Idle Animation System](#idle-animation-system)
 - [Firmware Architecture](#firmware-architecture)
 - [Technical Implementation](#technical-implementation-overview)
@@ -119,6 +121,38 @@ The firmware is split into several key files to keep the logic organized and ass
 - **[movement-sequences.h](movement-sequences.h)**: Definitions for all procedural movement and pose animations.
 - **[captive-portal.h](captive-portal.h)**: Contains the HTML, CSS, and JS for the web-based remote control interface.
 
+## Servo Calibration & Trims
+
+The firmware includes a built-in servo trim system to compensate for mechanical misalignment. This is essential because servo center positions may vary between units.
+
+### Using the Web UI
+1. **Access the Trims panel**: Open the web interface and tap **Trims** in the System section
+2. **Adjust each servo**: Use the `+` and `-` buttons for each motor (L1-L4, R1-R4)
+3. **Real-time feedback**: The robot moves immediately when you adjust a trim
+4. **Visual indicators**: Green = positive offset, Red = negative offset, Theme color = zero
+5. **Save**: Values are applied immediately; use "Save Trims" to confirm, or "Reset" to zero all values
+
+### How Trims Work
+- Trims are stored as `int8_t servoSubtrim[8]` offsets (degrees) applied to every servo command
+- The firmware tracks each servo's target angle and re-applies all trims when any trim changes
+- All poses, movements, and manual controls automatically include the trim offset
+- Range: **-90 to +90 degrees** per servo
+
+### NVS Persistence
+The firmware can save trim values to ESP32 non-volatile storage (NVS):
+```cpp
+#define SAVE_TRIMS true  // Set to true to persist trims across reboots
+```
+When `SAVE_TRIMS` is `false` (default for testing), trims reset to zero on each boot. Set to `true` for production use.
+
+### Serial CLI Commands
+```
+subtrim              - Display current trim values
+subtrim <motor> <v>  - Set trim for motor 0-7 to value -90..+90
+subtrim save         - Save trims to NVS
+subtrim reset        - Zero all trims and save to NVS
+```
+
 ## Technical Implementation Overview
 
 The firmware is built on the Arduino-ESP32 framework. Currently the firmware is running on a single-core event loop, and hardware-based PWM timers for precise motor control.
@@ -138,6 +172,7 @@ The firmware is built on the Arduino-ESP32 framework. Currently the firmware is 
   - `/api/status`: JSON status endpoint (GET)
   - `/api/command`: JSON command endpoint (POST) - supports face-only updates and combined face+movement commands
   - `/getSettings` / `/setSettings`: Parameter configuration
+  - `/getSubtrim` / `/setSubtrim` / `/resetSubtrim`: Servo subtrim management
 - **Face-Only Command Support**: The `/api/command` endpoint intelligently detects face-only requests (no `command` field) and updates the display without triggering movement animations.
 - **Non-Blocking Control Flow**: Instead of `delay()`, the firmware uses a custom `pressingCheck(String cmd, int ms)` function. This function polls `server.handleClient()` and `dnsServer.processNextRequest()` during animation frames, allowing for real-time interruptibility (e.g., immediate stop on button release). This pressingCheck protocol can be used for motion commands like walking to play each motion only when the button is held.
 
@@ -148,6 +183,19 @@ The firmware is built on the Arduino-ESP32 framework. Currently the firmware is 
 - **Rendering Pipeline**: The `updateAnimatedFace()` function manages frame rates and sequence looping outside of the main movement logic to ensure smooth visual feedback even during complex movements.
 - **Dynamic WiFi Info Overlay**: The `updateWifiInfoScroll()` function composites scrolling connection information over the face bitmap during the first 30 seconds of operation (before first input), drawing the face as background with a black bar and white text overlay for readability.
 - **Idle Animation System**: Implements realistic idle behavior with randomized blinking (including double-blinks) and boomerang face animations, triggered automatically when no input is detected.
+
+### Web Control Interface
+The web interface ([captive-portal.h](captive-portal.h)) provides a responsive mobile-first controller:
+- **Movement D-Pad**: Hold-to-move directional controls with immediate stop on release
+- **Pose Grid**: One-tap pose triggers for animations (wave, dance, swim, etc.)
+- **Manual Motor Control**: Per-servo angle sliders for fine positioning
+- **Servo Trims**: Full-screen trim panel with +/- buttons for each servo (L1-L4, R1-R4)
+  - Real-time servo movement on each trim adjustment
+  - Values persist across reboots via ESP32 NVS (toggle with `#define SAVE_TRIMS`)
+  - Trims are applied as offsets to all poses and movements automatically
+  - Range: -90 to +90 degrees per servo
+- **Gamepad Support**: Automatic detection and polling of USB/Bluetooth gamepads
+- **Theme Customization**: Color picker with preset themes and custom color support
 
 ## Prerequisites & Development Environment
 
@@ -271,6 +319,18 @@ GET /getSettings
 # Returns: {"frameDelay":100,"walkCycles":10,"motorCurrentDelay":20,"faceFps":8}
 
 GET /setSettings?frameDelay=120&walkCycles=15&motorCurrentDelay=25&faceFps=10
+```
+
+#### Servo Trims
+```http
+GET /getSubtrim
+# Returns: {"subtrim":[0,0,0,0,0,0,0,0]}
+
+GET /setSubtrim?motor=1&value=5
+# Sets servo 1 trim to +5 degrees (range: -90 to +90)
+
+GET /resetSubtrim
+# Resets all servo trims to 0
 ```
 
 ### JSON API (Recommended for Network Clients)
