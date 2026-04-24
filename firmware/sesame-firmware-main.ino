@@ -2,6 +2,7 @@
 #include <WebServer.h>
 #include <DNSServer.h>
 #include <ESPmDNS.h>
+#include <Preferences.h>
 #include <Wire.h>
 #include <ESP32Servo.h>
 #include <Adafruit_GFX.h>
@@ -94,6 +95,33 @@ const int servoPins[8] = {15, 2, 23, 19, 4, 16, 17, 18};
 
 // Subtrim values for each servo (offset in degrees)
 int8_t servoSubtrim[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+// NVS for persistent storage
+Preferences prefs;
+
+void saveSubtrimToNVS() {
+  prefs.begin("sesame", false);
+  prefs.putBytes("subtrim", servoSubtrim, sizeof(servoSubtrim));
+  prefs.end();
+  Serial.println("Subtrim values saved to NVS");
+}
+
+void loadSubtrimFromNVS() {
+  prefs.begin("sesame", true);
+  size_t len = prefs.getBytesLength("subtrim");
+  if (len == sizeof(servoSubtrim)) {
+    prefs.getBytes("subtrim", servoSubtrim, sizeof(servoSubtrim));
+    Serial.println("Subtrim values loaded from NVS:");
+    for (int i = 0; i < 8; i++) {
+      Serial.print("Motor "); Serial.print(i); Serial.print(": ");
+      if (servoSubtrim[i] >= 0) Serial.print("+");
+      Serial.println(servoSubtrim[i]);
+    }
+  } else {
+    Serial.println("No subtrim values in NVS, using defaults");
+  }
+  prefs.end();
+}
 
 
 // Animation constants
@@ -376,6 +404,7 @@ void handleSetSubtrim() {
     int value = server.arg("value").toInt();
     if (motorNum >= 1 && motorNum <= 8 && value >= -90 && value <= 90) {
       servoSubtrim[motorNum - 1] = (int8_t)value;
+      saveSubtrimToNVS();
       recordInput();
       server.send(200, "text/plain", "OK");
     } else {
@@ -388,12 +417,16 @@ void handleSetSubtrim() {
 
 void handleResetSubtrim() {
   for (int i = 0; i < 8; i++) servoSubtrim[i] = 0;
+  saveSubtrimToNVS();
   recordInput();
   server.send(200, "text/plain", "OK");
 }
 void setup() {
   Serial.begin(115200);
   randomSeed(micros());
+  
+  // Load subtrim values from NVS
+  loadSubtrimFromNVS();
   
   // I2C Init for ESP32
   Wire.begin(I2C_SDA, I2C_SCL);
@@ -585,17 +618,13 @@ void loop() {
           }
         }
         else if (strcmp(command_buffer, "subtrim save") == 0 || strcmp(command_buffer, "st save") == 0) {
-          Serial.println("Copy and paste this into your code:");
-          Serial.print("int8_t servoSubtrim[8] = {");
-          for (int i = 0; i < 8; i++) {
-            Serial.print(servoSubtrim[i]);
-            if (i < 7) Serial.print(", ");
-          }
-          Serial.println("};");
+          saveSubtrimToNVS();
+          Serial.println("Subtrim values saved to NVS");
         }
         else if (strncmp(command_buffer, "subtrim reset", 13) == 0 || strncmp(command_buffer, "st reset", 8) == 0) {
           for (int i = 0; i < 8; i++) servoSubtrim[i] = 0;
-          Serial.println("All subtrim values reset to 0");
+          saveSubtrimToNVS();
+          Serial.println("All subtrim values reset to 0 and saved to NVS");
         }
         else if (strncmp(command_buffer, "subtrim ", 8) == 0 || strncmp(command_buffer, "st ", 3) == 0) {
           const char* params = (command_buffer[1] == 't') ? command_buffer + 3 : command_buffer + 8;
@@ -604,6 +633,7 @@ void loop() {
             if (trimMotor >= 0 && trimMotor < 8) {
               if (trimValue >= -90 && trimValue <= 90) {
                 servoSubtrim[trimMotor] = trimValue;
+                saveSubtrimToNVS();
                 Serial.print("Motor "); Serial.print(trimMotor); Serial.print(" subtrim set to ");
                 if (trimValue >= 0) Serial.print("+");
                 Serial.println(trimValue);
