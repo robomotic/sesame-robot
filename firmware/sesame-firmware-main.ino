@@ -12,7 +12,7 @@
 
 // --- Access Point Configuration ---
 // This is the network the Robot will create
-#define AP_SSID  "Sesame-Controller"
+#define AP_SSID  "Sesame-Orange-Bot"
 #define AP_PASS  "12345678" // Must be at least 8 characters
 
 // --- Station Mode Configuration (Optional) ---
@@ -32,12 +32,12 @@
 //#define I2C_SCL 9
 
 // I2C Pins for Distro Board
-//#define I2C_SDA 21
-//#define I2C_SCL 22
+#define I2C_SDA 21
+#define I2C_SCL 22
 
 // I2C Pins for S2 Mini Board
-#define I2C_SDA 33
-#define I2C_SCL 35
+//#define I2C_SDA 33
+//#define I2C_SCL 35
 
 
 // DNS Server for Captive Portal
@@ -87,10 +87,10 @@ Servo servos[8];
 //const int servoPins[8] = {4, 5, 6, 7, 15, 16, 17, 18};
 
 // Sesame Distro Board Pinout
-//const int servoPins[8] = {15, 2, 23, 19, 4, 16, 17, 18};
+const int servoPins[8] = {15, 2, 23, 19, 4, 16, 17, 18};
 
 // Lolin S2 Mini Pinout
-const int servoPins[8] = {1, 2, 4, 6, 8, 10, 13, 14};
+//const int servoPins[8] = {1, 2, 4, 6, 8, 10, 13, 14};
 
 // Subtrim values for each servo (offset in degrees)
 int8_t servoSubtrim[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -191,6 +191,9 @@ void handleGetSettings();
 void handleSetSettings();
 void handleGetStatus();
 void handleApiCommand();
+void handleGetSubtrim();
+void handleSetSubtrim();
+void handleResetSubtrim();
 void updateWifiInfoScroll();
 void recordInput();
 
@@ -357,6 +360,37 @@ void handleApiCommand() {
   }
 }
 
+void handleGetSubtrim() {
+  String json = "{\"subtrim\":[";
+  for (int i = 0; i < 8; i++) {
+    json += String(servoSubtrim[i]);
+    if (i < 7) json += ",";
+  }
+  json += "]}";
+  server.send(200, "application/json", json);
+}
+
+void handleSetSubtrim() {
+  if (server.hasArg("motor") && server.hasArg("value")) {
+    int motorNum = server.arg("motor").toInt();
+    int value = server.arg("value").toInt();
+    if (motorNum >= 1 && motorNum <= 8 && value >= -90 && value <= 90) {
+      servoSubtrim[motorNum - 1] = (int8_t)value;
+      recordInput();
+      server.send(200, "text/plain", "OK");
+    } else {
+      server.send(400, "text/plain", "Invalid motor or value");
+    }
+  } else {
+    server.send(400, "text/plain", "Bad Args");
+  }
+}
+
+void handleResetSubtrim() {
+  for (int i = 0; i < 8; i++) servoSubtrim[i] = 0;
+  recordInput();
+  server.send(200, "text/plain", "OK");
+}
 void setup() {
   Serial.begin(115200);
   randomSeed(micros());
@@ -448,6 +482,9 @@ void setup() {
   server.on("/cmd", handleCommandWeb);
   server.on("/getSettings", handleGetSettings);
   server.on("/setSettings", handleSetSettings);
+  server.on("/getSubtrim", handleGetSubtrim);
+  server.on("/setSubtrim", handleSetSubtrim);
+  server.on("/resetSubtrim", handleResetSubtrim);
   
   // API endpoints for network communication
   server.on("/api/status", handleGetStatus);

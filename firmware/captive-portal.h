@@ -249,6 +249,62 @@ const char index_html[] PROGMEM = R"rawliteral(
       background: rgba(46, 204, 113, 0.1);
     }
     
+    /* Trims Section */
+    .trim-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .trim-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0,0,0,0.2);
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+    .trim-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      width: 30px;
+    }
+    .trim-value {
+      font-size: 14px;
+      color: var(--content-color);
+      width: 35px;
+      text-align: center;
+      font-weight: 600;
+    }
+    .btn-trim-minus, .btn-trim-plus {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 8px;
+    }
+    .btn-trim-minus {
+      background: linear-gradient(145deg, #e74c3c, #c0392b);
+      color: #fff;
+    }
+    .btn-trim-plus {
+      background: linear-gradient(145deg, #2ecc71, #27ae60);
+      color: #fff;
+    }
+    .btn-save-trims, .btn-reset-trims {
+      color: #fff;
+      padding: 12px;
+      font-size: 14px;
+      border-radius: 8px;
+    }
+    .btn-save-trims {
+      background: linear-gradient(145deg, var(--content-color), var(--content-color-dark));
+    }
+    .btn-reset-trims {
+      background: linear-gradient(145deg, #555, #444);
+    }
+    
     /* Settings Panel */
     .settings-panel { 
       display: none; 
@@ -416,6 +472,65 @@ const char index_html[] PROGMEM = R"rawliteral(
           <div id="gamepadStatus" class="gamepad-status">Gamepad disconnected</div>
         </div>
       </div>
+
+      <!-- Trims Section -->
+      <div class="section">
+        <div class="section-title">Trims</div>
+        <div class="trim-grid">
+          <div class="trim-row">
+            <span class="trim-label">L1</span>
+            <button class="btn-trim-minus" onclick="adjustTrim(3, -1)">-</button>
+            <span class="trim-value" id="trim3">0</span>
+            <button class="btn-trim-plus" onclick="adjustTrim(3, 1)">+</button>
+          </div>
+          <div class="trim-row">
+            <span class="trim-label">L2</span>
+            <button class="btn-trim-minus" onclick="adjustTrim(4, -1)">-</button>
+            <span class="trim-value" id="trim4">0</span>
+            <button class="btn-trim-plus" onclick="adjustTrim(4, 1)">+</button>
+          </div>
+          <div class="trim-row">
+            <span class="trim-label">L3</span>
+            <button class="btn-trim-minus" onclick="adjustTrim(7, -1)">-</button>
+            <span class="trim-value" id="trim7">0</span>
+            <button class="btn-trim-plus" onclick="adjustTrim(7, 1)">+</button>
+          </div>
+          <div class="trim-row">
+            <span class="trim-label">L4</span>
+            <button class="btn-trim-minus" onclick="adjustTrim(8, -1)">-</button>
+            <span class="trim-value" id="trim8">0</span>
+            <button class="btn-trim-plus" onclick="adjustTrim(8, 1)">+</button>
+          </div>
+          <div class="trim-row">
+            <span class="trim-label">R1</span>
+            <button class="btn-trim-minus" onclick="adjustTrim(1, -1)">-</button>
+            <span class="trim-value" id="trim1">0</span>
+            <button class="btn-trim-plus" onclick="adjustTrim(1, 1)">+</button>
+          </div>
+          <div class="trim-row">
+            <span class="trim-label">R2</span>
+            <button class="btn-trim-minus" onclick="adjustTrim(2, -1)">-</button>
+            <span class="trim-value" id="trim2">0</span>
+            <button class="btn-trim-plus" onclick="adjustTrim(2, 1)">+</button>
+          </div>
+          <div class="trim-row">
+            <span class="trim-label">R3</span>
+            <button class="btn-trim-minus" onclick="adjustTrim(6, -1)">-</button>
+            <span class="trim-value" id="trim6">0</span>
+            <button class="btn-trim-plus" onclick="adjustTrim(6, 1)">+</button>
+          </div>
+          <div class="trim-row">
+            <span class="trim-label">R4</span>
+            <button class="btn-trim-minus" onclick="adjustTrim(5, -1)">-</button>
+            <span class="trim-value" id="trim5">0</span>
+            <button class="btn-trim-plus" onclick="adjustTrim(5, 1)">+</button>
+          </div>
+        </div>
+        <div style="margin-top: 15px; display: flex; gap: 10px;">
+          <button class="btn-save-trims" onclick="saveTrims()" style="flex:1;">Save Trims</button>
+          <button class="btn-reset-trims" onclick="resetTrims()" style="flex:1;">Reset</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -522,6 +637,7 @@ let motorsLocked = false;
 // Load theme on page load
 document.addEventListener('DOMContentLoaded', () => {
   loadTheme();
+  loadSubtrim();
 });
 
 function loadTheme() {
@@ -693,6 +809,52 @@ function openMotorControl() {
 
 function closeMotorControl() {
   document.getElementById('motorControlPanel').style.display = 'none';
+}
+
+function loadSubtrim() {
+  fetch('/getSubtrim').then(r => r.json()).then(data => {
+    for (let i = 1; i <= 8; i++) {
+      const el = document.getElementById('trim' + i);
+      if (el) {
+        el.textContent = data.subtrim[i-1];
+        updateTrimColor(el, data.subtrim[i-1]);
+      }
+    }
+  }).catch(console.log);
+}
+
+function updateTrimColor(el, value) {
+  if (value > 0) el.style.color = '#2ecc71';
+  else if (value < 0) el.style.color = '#e74c3c';
+  else el.style.color = 'var(--content-color)';
+}
+
+function adjustTrim(motorNum, delta) {
+  const el = document.getElementById('trim' + motorNum);
+  if (!el) return;
+  let currentValue = parseInt(el.textContent);
+  let newValue = currentValue + delta;
+  newValue = Math.max(-90, Math.min(90, newValue));
+  el.textContent = newValue;
+  updateTrimColor(el, newValue);
+  fetch('/setSubtrim?motor=' + motorNum + '&value=' + newValue).catch(console.log);
+}
+
+function saveTrims() {
+  alert('Trims saved! Values are applied immediately.');
+}
+
+function resetTrims() {
+  if (!confirm('Reset all trim values to 0?')) return;
+  fetch('/resetSubtrim').then(() => {
+    for (let i = 1; i <= 8; i++) {
+      const el = document.getElementById('trim' + i);
+      if (el) {
+        el.textContent = '0';
+        updateTrimColor(el, 0);
+      }
+    }
+  }).catch(console.log);
 }
 
 function saveSettings() {
