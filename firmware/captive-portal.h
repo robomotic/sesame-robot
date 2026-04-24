@@ -58,328 +58,68 @@ const char index_html[] PROGMEM = R"rawliteral(
     }
     
     /* Section Containers */
-    .sections-container {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-    
-    .section {
-      background: rgba(30, 30, 30, 0.8);
-      border: 1px solid #333;
-      border-radius: 16px;
-      padding: 15px;
-      margin: 0 auto;
-      width: calc(100% - 20px);
-      max-width: 450px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      box-sizing: border-box;
-    }
-    
-    .section-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--content-color);
-      margin: 0 0 15px 0;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+    .sections-container{display:flex;flex-direction:column;gap:15px;max-width:1400px;margin:0 auto}
+    .section{background:rgba(30,30,30,.8);border:1px solid #333;border-radius:16px;padding:15px;margin:0 auto;width:calc(100% - 20px);max-width:450px;box-shadow:0 4px 20px rgba(0,0,0,.3);box-sizing:border-box}
+    .section-title{font-size:16px;font-weight:600;color:var(--content-color);margin:0 0 15px;text-transform:uppercase;letter-spacing:1px}
     
     /* Button Base Styles */
-    button { 
-      background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
-      border: none; 
-      color: #e0e0e0; 
-      padding: 15px; 
-      font-size: 18px; 
-      border-radius: 12px; 
-      cursor: pointer; 
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-      transition: all 0.1s;
-      font-weight: 500;
-    }
-    button:active { 
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      transform: translateY(2px); 
-    }
+    button{background:linear-gradient(145deg,#3a3a3a,#2a2a2a);border:none;color:#e0e0e0;padding:15px;font-size:18px;border-radius:12px;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,.3);transition:all .1s;font-weight:500}
+    button:active{box-shadow:0 2px 4px rgba(0,0,0,.3);transform:translateY(2px)}
     
     /* D-Pad Controls */
-    .dpad-container { 
-      display: flex; 
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-      width: 100%;
-    }
-    .dpad { 
-      display: grid; 
-      grid-template-columns: repeat(3, 1fr); 
-      grid-template-rows: repeat(2, 1fr); 
-      gap: 12px;
-      width: 100%;
-      max-width: 294px;
-      aspect-ratio: 3 / 2;
-    }
-    .dpad button { 
-      font-size: 35px; 
-      border: 2px solid #555; 
-      color: #fff;
-      width: 100%;
-      height: 100%;
-      min-height: 70px;
-    }
-    .spacer { 
-      visibility: hidden; 
-    }
+    .dpad-container{display:flex;flex-direction:column;align-items:center;gap:15px;width:100%}
+    .dpad{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:12px;width:100%;max-width:294px;aspect-ratio:3/2}
+    .dpad button{font-size:35px;border:2px solid #555;color:#fff;width:100%;height:100%;min-height:70px}
+    .spacer{visibility:hidden}
     
     /* Pose Grid */
-    .grid { 
-      display: grid; 
-      grid-template-columns: repeat(3, 1fr); 
-      gap: 10px; 
-    }
-    .btn-pose { 
-      background: linear-gradient(145deg, var(--content-color), var(--content-color-dark));
-      padding: 12px 8px;
-      font-size: 15px;
-    }
-    .btn-pose:active { 
-      background: linear-gradient(145deg, var(--content-color-dark), var(--content-color-darker));
-    }
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .btn-pose{background:linear-gradient(145deg,var(--content-color),var(--content-color-dark));padding:12px 8px;font-size:15px}
+    .btn-pose:active{background:linear-gradient(145deg,var(--content-color-dark),var(--content-color-darker))}
     
     /* Special Buttons */
-    .btn-stop-all { 
-      background: linear-gradient(145deg, #e63946, #c92a35);
-      width: 100%; 
-      font-size: 20px; 
-      padding: 18px; 
-      box-shadow: 0 6px 12px rgba(230, 57, 70, 0.4);
-      border: 2px solid #ff6b6b;
-      color: #fff;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-    .btn-stop-all:active { 
-      background: linear-gradient(145deg, #c92a35, #a8222c);
-      transform: translateY(3px); 
-    }
-    
-    .btn-settings { 
-      background: linear-gradient(145deg, #555, #444);
-      padding: 12px 25px;
-      font-size: 16px;
-    }
+    .btn-stop-all{background:linear-gradient(145deg,#e63946,#c92a35);width:100%;font-size:20px;padding:18px;box-shadow:0 6px 12px rgba(230,57,70,.4);border:2px solid #ff6b6b;color:#fff;text-transform:uppercase;letter-spacing:2px}
+    .btn-stop-all:active{background:linear-gradient(145deg,#c92a35,#a8222c);transform:translateY(3px)}
+    .btn-settings{background:linear-gradient(145deg,#555,#444);padding:12px 25px;font-size:16px}
     
     /* Motor Controls */
-    .lock-indicator {
-      font-size: 11px;
-      color: #ff6b6b;
-      text-align: center;
-      margin-top: 5px;
-      display: none;
-    }
-    .lock-indicator.active {
-      display: block;
-    }
-    
-    .motor-controls {
-      margin-top: 10px;
-    }
-    .motor-slider {
-      margin: 15px 0;
-    }
-    .motor-slider label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: #aaa;
-      margin-bottom: 5px;
-    }
-    .motor-slider input[type="range"] {
-      width: 100%;
-      height: 6px;
-      background: #333;
-      border-radius: 5px;
-      outline: none;
-      -webkit-appearance: none;
-    }
-    .motor-slider input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      background: var(--content-color);
-      border-radius: 50%;
-      cursor: pointer;
-      box-shadow: 0 2px 6px var(--content-color-glow);
-    }
-    .motor-slider input[type="range"]::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
-      background: var(--content-color);
-      border-radius: 50%;
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 2px 6px var(--content-color-glow);
-    }
-    .motor-slider input[type="range"]:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .motor-slider input[type="range"]:disabled::-webkit-slider-thumb,
-    .motor-slider input[type="range"]:disabled::-moz-range-thumb {
-      background: #666;
-      cursor: not-allowed;
-    }
+    .lock-indicator{font-size:11px;color:#ff6b6b;text-align:center;margin-top:5px;display:none}
+    .lock-indicator.active{display:block}
+    .motor-controls{margin-top:10px}
+    .motor-slider{margin:15px 0}
+    .motor-slider label{display:flex;justify-content:space-between;font-size:12px;color:#aaa;margin-bottom:5px}
+    .motor-slider input[type="range"]{width:100%;height:6px;background:#333;border-radius:5px;outline:none;-webkit-appearance:none}
+    .motor-slider input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--content-color);border-radius:50%;cursor:pointer;box-shadow:0 2px 6px var(--content-color-glow)}
+    .motor-slider input[type="range"]::-moz-range-thumb{width:18px;height:18px;background:var(--content-color);border-radius:50%;cursor:pointer;border:none;box-shadow:0 2px 6px var(--content-color-glow)}
+    .motor-slider input[type="range"]:disabled{opacity:.5;cursor:not-allowed}
+    .motor-slider input[type="range"]:disabled::-webkit-slider-thumb,.motor-slider input[type="range"]:disabled::-moz-range-thumb{background:#666;cursor:not-allowed}
     
     /* Gamepad Status */
-    .gamepad-status {
-      font-size: 13px;
-      padding: 8px 14px;
-      border-radius: 10px;
-      border: 2px solid #666;
-      color: #ccc;
-      background: rgba(26, 26, 26, 0.8);
-      display: inline-block;
-    }
-    .gamepad-status.connected {
-      border-color: #2ecc71;
-      color: #2ecc71;
-      background: rgba(46, 204, 113, 0.1);
-    }
+    .gamepad-status{font-size:13px;padding:8px 14px;border-radius:10px;border:2px solid #666;color:#ccc;background:rgba(26,26,26,.8);display:inline-block}
+    .gamepad-status.connected{border-color:#2ecc71;color:#2ecc71;background:rgba(46,204,113,.1)}
     
     /* Trims Section */
-    .trim-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
-    .trim-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(0,0,0,0.2);
-      padding: 8px 12px;
-      border-radius: 8px;
-    }
-    .trim-label {
-      font-size: 14px;
-      font-weight: 600;
-      color: #fff;
-      width: 30px;
-    }
-    .trim-value {
-      font-size: 14px;
-      color: var(--content-color);
-      width: 35px;
-      text-align: center;
-      font-weight: 600;
-    }
-    .btn-trim-minus, .btn-trim-plus {
-      width: 36px;
-      height: 36px;
-      padding: 0;
-      font-size: 20px;
-      font-weight: bold;
-      border-radius: 8px;
-    }
-    .btn-trim-minus {
-      background: linear-gradient(145deg, #e74c3c, #c0392b);
-      color: #fff;
-    }
-    .btn-trim-plus {
-      background: linear-gradient(145deg, #2ecc71, #27ae60);
-      color: #fff;
-    }
-    .btn-save-trims, .btn-reset-trims {
-      color: #fff;
-      padding: 12px;
-      font-size: 14px;
-      border-radius: 8px;
-    }
-    .btn-save-trims {
-      background: linear-gradient(145deg, var(--content-color), var(--content-color-dark));
-    }
-    .btn-reset-trims {
-      background: linear-gradient(145deg, #555, #444);
-    }
+    .trim-grid{display:grid;grid-template-columns:1fr;gap:8px}
+    .trim-row{display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.2);padding:8px 12px;border-radius:8px}
+    .trim-label{font-size:14px;font-weight:600;color:#fff;width:30px}
+    .trim-value{font-size:14px;color:var(--content-color);width:35px;text-align:center;font-weight:600}
+    .btn-trim-minus,.btn-trim-plus{width:36px;height:36px;padding:0;font-size:20px;font-weight:bold;border-radius:8px}
+    .btn-trim-minus{background:linear-gradient(145deg,#e74c3c,#c0392b);color:#fff}
+    .btn-trim-plus{background:linear-gradient(145deg,#2ecc71,#27ae60);color:#fff}
+    .btn-save-trims,.btn-reset-trims{color:#fff;padding:12px;font-size:14px;border-radius:8px}
+    .btn-save-trims{background:linear-gradient(145deg,var(--content-color),var(--content-color-dark))}
+    .btn-reset-trims{background:linear-gradient(145deg,#555,#444)}
     
     /* Settings Panel */
-    .settings-panel { 
-      display: none; 
-      position: fixed; 
-      top: 0; 
-      left: 0; 
-      width: 100%; 
-      height: 100%; 
-      background: rgba(0,0,0,0.9); 
-      z-index: 100; 
-      backdrop-filter: blur(8px);
-      overflow-y: auto;
-    }
-    .settings-content { 
-      background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
-      border: 1px solid #444; 
-      max-width: 400px; 
-      margin: 30px auto; 
-      padding: 25px; 
-      border-radius: 20px; 
-      text-align: left; 
-      box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
-    }
-    .settings-content h3 { 
-      color: var(--content-color); 
-      margin-top: 0; 
-      text-align: center;
-      font-size: 24px;
-    }
-    .settings-section {
-      margin: 20px 0;
-      padding: 15px;
-      background: rgba(0,0,0,0.3);
-      border-radius: 10px;
-    }
-    .settings-section h4 {
-      color: var(--content-color);
-      margin: 0 0 10px 0;
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .settings-content label { 
-      display: block; 
-      margin-top: 12px; 
-      font-weight: 500; 
-      color: #ccc;
-      font-size: 13px;
-    }
-    .settings-content input, 
-    .settings-content select { 
-      width: 100%; 
-      padding: 10px; 
-      margin-top: 5px; 
-      background: #333; 
-      color: #fff; 
-      border: 1px solid #555; 
-      border-radius: 8px; 
-      box-sizing: border-box;
-      font-size: 14px;
-    }
-    .btn-save { 
-      background: linear-gradient(145deg, #2ecc71, #27ae60);
-      box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
-      width: 100%; 
-      margin-top: 25px; 
-      color: #fff; 
-    }
-    .btn-close { 
-      background: linear-gradient(145deg, #e74c3c, #c0392b);
-      box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
-      width: 100%; 
-      margin-top: 12px; 
-      color: #fff; 
-    }
+    .settings-panel{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:100;backdrop-filter:blur(8px);overflow-y:auto}
+    .settings-content{background:linear-gradient(145deg,#1e1e1e,#2a2a2a);border:1px solid #444;max-width:400px;margin:30px auto;padding:25px;border-radius:20px;text-align:left;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+    .settings-content h3{color:var(--content-color);margin-top:0;text-align:center;font-size:24px}
+    .settings-section{margin:20px 0;padding:15px;background:rgba(0,0,0,.3);border-radius:10px}
+    .settings-section h4{color:var(--content-color);margin:0 0 10px;font-size:14px;text-transform:uppercase;letter-spacing:1px}
+    .settings-content label{display:block;margin-top:12px;font-weight:500;color:#ccc;font-size:13px}
+    .settings-content input,.settings-content select{width:100%;padding:10px;margin-top:5px;background:#333;color:#fff;border:1px solid #555;border-radius:8px;box-sizing:border-box;font-size:14px}
+    .btn-save{background:linear-gradient(145deg,#2ecc71,#27ae60);box-shadow:0 4px 8px rgba(46,204,113,.3);width:100%;margin-top:25px;color:#fff}
+    .btn-close{background:linear-gradient(145deg,#e74c3c,#c0392b);box-shadow:0 4px 8px rgba(231,76,60,.3);width:100%;margin-top:12px;color:#fff}
     
     /* Desktop Layout */
     @media (min-width: 1024px) {
@@ -468,67 +208,9 @@ const char index_html[] PROGMEM = R"rawliteral(
       <div class="section">
         <div class="section-title">System</div>
         <button class="btn-settings" onclick="openSettings()">Settings</button>
+        <button class="btn-settings" style="margin-top:10px;" onclick="openTrims()">Trims</button>
         <div style="margin-top: 15px;">
           <div id="gamepadStatus" class="gamepad-status">Gamepad disconnected</div>
-        </div>
-      </div>
-
-      <!-- Trims Section -->
-      <div class="section">
-        <div class="section-title">Trims</div>
-        <div class="trim-grid">
-          <div class="trim-row">
-            <span class="trim-label">L1</span>
-            <button class="btn-trim-minus" onclick="adjustTrim(3, -1)">-</button>
-            <span class="trim-value" id="trim3">0</span>
-            <button class="btn-trim-plus" onclick="adjustTrim(3, 1)">+</button>
-          </div>
-          <div class="trim-row">
-            <span class="trim-label">L2</span>
-            <button class="btn-trim-minus" onclick="adjustTrim(4, -1)">-</button>
-            <span class="trim-value" id="trim4">0</span>
-            <button class="btn-trim-plus" onclick="adjustTrim(4, 1)">+</button>
-          </div>
-          <div class="trim-row">
-            <span class="trim-label">L3</span>
-            <button class="btn-trim-minus" onclick="adjustTrim(7, -1)">-</button>
-            <span class="trim-value" id="trim7">0</span>
-            <button class="btn-trim-plus" onclick="adjustTrim(7, 1)">+</button>
-          </div>
-          <div class="trim-row">
-            <span class="trim-label">L4</span>
-            <button class="btn-trim-minus" onclick="adjustTrim(8, -1)">-</button>
-            <span class="trim-value" id="trim8">0</span>
-            <button class="btn-trim-plus" onclick="adjustTrim(8, 1)">+</button>
-          </div>
-          <div class="trim-row">
-            <span class="trim-label">R1</span>
-            <button class="btn-trim-minus" onclick="adjustTrim(1, -1)">-</button>
-            <span class="trim-value" id="trim1">0</span>
-            <button class="btn-trim-plus" onclick="adjustTrim(1, 1)">+</button>
-          </div>
-          <div class="trim-row">
-            <span class="trim-label">R2</span>
-            <button class="btn-trim-minus" onclick="adjustTrim(2, -1)">-</button>
-            <span class="trim-value" id="trim2">0</span>
-            <button class="btn-trim-plus" onclick="adjustTrim(2, 1)">+</button>
-          </div>
-          <div class="trim-row">
-            <span class="trim-label">R3</span>
-            <button class="btn-trim-minus" onclick="adjustTrim(6, -1)">-</button>
-            <span class="trim-value" id="trim6">0</span>
-            <button class="btn-trim-plus" onclick="adjustTrim(6, 1)">+</button>
-          </div>
-          <div class="trim-row">
-            <span class="trim-label">R4</span>
-            <button class="btn-trim-minus" onclick="adjustTrim(5, -1)">-</button>
-            <span class="trim-value" id="trim5">0</span>
-            <button class="btn-trim-plus" onclick="adjustTrim(5, 1)">+</button>
-          </div>
-        </div>
-        <div style="margin-top: 15px; display: flex; gap: 10px;">
-          <button class="btn-save-trims" onclick="saveTrims()" style="flex:1;">Save Trims</button>
-          <button class="btn-reset-trims" onclick="resetTrims()" style="flex:1;">Reset</button>
         </div>
       </div>
     </div>
@@ -625,6 +307,27 @@ const char index_html[] PROGMEM = R"rawliteral(
       </div>
 
       <button class="btn-close" onclick="closeMotorControl()">Close</button>
+    </div>
+  </div>
+
+  <div id="trimPanel" class="settings-panel">
+    <div class="settings-content">
+      <h3>Servo Trims</h3>
+      <div class="trim-grid">
+        <div class="trim-row"><span class="trim-label">L1</span><button class="btn-trim-minus" onclick="adjustTrim(3,-1)">-</button><span class="trim-value" id="trim3">0</span><button class="btn-trim-plus" onclick="adjustTrim(3,1)">+</button></div>
+        <div class="trim-row"><span class="trim-label">L2</span><button class="btn-trim-minus" onclick="adjustTrim(4,-1)">-</button><span class="trim-value" id="trim4">0</span><button class="btn-trim-plus" onclick="adjustTrim(4,1)">+</button></div>
+        <div class="trim-row"><span class="trim-label">L3</span><button class="btn-trim-minus" onclick="adjustTrim(7,-1)">-</button><span class="trim-value" id="trim7">0</span><button class="btn-trim-plus" onclick="adjustTrim(7,1)">+</button></div>
+        <div class="trim-row"><span class="trim-label">L4</span><button class="btn-trim-minus" onclick="adjustTrim(8,-1)">-</button><span class="trim-value" id="trim8">0</span><button class="btn-trim-plus" onclick="adjustTrim(8,1)">+</button></div>
+        <div class="trim-row"><span class="trim-label">R1</span><button class="btn-trim-minus" onclick="adjustTrim(1,-1)">-</button><span class="trim-value" id="trim1">0</span><button class="btn-trim-plus" onclick="adjustTrim(1,1)">+</button></div>
+        <div class="trim-row"><span class="trim-label">R2</span><button class="btn-trim-minus" onclick="adjustTrim(2,-1)">-</button><span class="trim-value" id="trim2">0</span><button class="btn-trim-plus" onclick="adjustTrim(2,1)">+</button></div>
+        <div class="trim-row"><span class="trim-label">R3</span><button class="btn-trim-minus" onclick="adjustTrim(6,-1)">-</button><span class="trim-value" id="trim6">0</span><button class="btn-trim-plus" onclick="adjustTrim(6,1)">+</button></div>
+        <div class="trim-row"><span class="trim-label">R4</span><button class="btn-trim-minus" onclick="adjustTrim(5,-1)">-</button><span class="trim-value" id="trim5">0</span><button class="btn-trim-plus" onclick="adjustTrim(5,1)">+</button></div>
+      </div>
+      <div style="margin-top:15px;display:flex;gap:10px;">
+        <button class="btn-save-trims" onclick="saveTrims()" style="flex:1;">Save Trims</button>
+        <button class="btn-reset-trims" onclick="resetTrims()" style="flex:1;">Reset</button>
+      </div>
+      <button class="btn-close" onclick="closeTrims()">Close</button>
     </div>
   </div>
 
@@ -809,6 +512,15 @@ function openMotorControl() {
 
 function closeMotorControl() {
   document.getElementById('motorControlPanel').style.display = 'none';
+}
+
+function openTrims() {
+  loadSubtrim();
+  document.getElementById('trimPanel').style.display = 'block';
+}
+
+function closeTrims() {
+  document.getElementById('trimPanel').style.display = 'none';
 }
 
 function loadSubtrim() {
