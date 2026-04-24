@@ -9,6 +9,15 @@ ___
 
 <img width="100%" height="728" alt="sesame-cover" src="https://github.com/user-attachments/assets/f0cc6ad0-135b-4515-8750-900f224ed7ae" />
 
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=NIgoQVQF_Ng">
+    <img src="https://github.com/user-attachments/assets/1663e022-0680-4053-97b4-53e669a6f07d" width="49%" alt="tutorial-button">
+  </a>
+  <a href="https://discord.gg/XDXkhQd8bC">
+    <img src="https://github.com/user-attachments/assets/378fcb48-5b12-4b46-9dcb-452432d49913" width="49%" alt="discord-button">
+  </a>
+</p>
+
 ___
 
 **Greetings, from your new best friend.**
@@ -73,7 +82,11 @@ A modified version of the original L4 foot joint, drilled to accommodate the LEG
 *   **Quadruped Design:** Uses 8 servo motors (2 per leg) to achieve roughly 8 total degrees of freedom.
 *   **Emotive Display:** Features a 128x64 OLED screen acting as a reactive face that syncs with movement.
 *   **Fully Printable:** Designed entirely for 3D printing in PLA with minimal supports.
+*   **Network Connectivity:** Connect to your WiFi network for remote control and API access.
+*   **JSON API:** RESTful API for programmatic control from Python, JavaScript, and more.
+*   **Conversational Faces:** Expressive emotion library with talk variants for voice assistant projects.
 *   **Sesame Studio:** New animation composer software to easily create custom movements.
+*   **Sesame Companion App:** Python application for voice control and advanced interactions.
 *   **Serial CLI:** Control the robot and trigger animations via a Serial Command Line Interface or the web UI.
 *   **Pre-programmed Emotes:** Includes animations for Walking, Waving, Dancing, Pointing, Resting, and more.
 
@@ -90,9 +103,9 @@ Follow these steps to build your own Sesame Robot:
 
 ### 1. Gather Parts 
 Check the **[Bill of Materials (BOM)](hardware/bom/README.md)** for a complete list of required electronics and hardware.
-*   Microcontroller: Lolin S2 Mini (recommended for new builds) or ESP32-DevKitC-32E with Distro Board V1
+*   Microcontroller: Lolin S2 Mini (recommended for DIY builds), Sesame Distro Board V2 (included in Build Kits, pre-flashed), or ESP32-DevKitC-32E with Distro Board V1 (legacy)
 *   Actuators: 8x MG90 Servos
-*   Power: 5V 3A source (USB-C PD for S2 Mini or battery + buck for both; see BOM for the 2× 10440 Li-ion + 2× AAA holder option)
+*   Power: 5V 3A source (USB-C PD for S2 Mini and V2 Distro Board, or battery + buck converter; see BOM for the 2× 10440 Li-ion + 2× AAA holder option)
 
 ### 2. Print Parts 
 Download the STLs and follow the **[Printing Guide](hardware/printing/README.md)**.
@@ -124,7 +137,25 @@ Sesame Studio is a standalone desktop application included in `software/sesame-s
 
 [**> Go to Sesame Studio**](software/sesame-studio/README.md)
 
-<img width="50%" height="925" alt="sesamestudio-preview" src="https://github.com/user-attachments/assets/589de8ec-5895-4d5a-aadf-dd944e42172f" />
+
+### Sesame Simulator
+The Sesame Simulator, created by Jay Li, is a Rust-based 3D simulation environment for testing Sesame's movements and kinematics in a virtual space. It features:
+*   **Physics-based Simulation:** Test walking and balance without hardware.
+*   **Web-based Interface:** Run the simulator directly in your browser.
+*   **URDF Integration:** Accurate modeling of Sesame's physical properties.
+
+[**> Go to Sesame Simulator**](https://one-for-all.github.io/sesame-robot-sim/)
+
+### Sesame Companion App
+The Sesame Companion App is a Python-based application that enables advanced control and interaction with your robot over your local network. It leverages the new JSON API and network mode features to provide:
+*   **Voice Assistant Integration:** Control Sesame with voice commands and see real-time emotional expressions.
+*   **Remote Control:** Command your robot from anywhere on your local network.
+*   **Face Control:** Change expressions dynamically based on conversation or context.
+*   **API Examples:** Reference implementation for building your own integrations.
+
+The Companion App works with robots running the latest firmware with network mode enabled.
+
+[**> Go to Sesame Companion App Repository**](https://github.com/dorianborian/sesame-companion-app)
 
 ### Firmware
 The ESP32 firmware (`sesame-firmware-main.ino`) handles the kinematics, face display, and WiFi control interface.
@@ -133,7 +164,6 @@ The ESP32 firmware (`sesame-firmware-main.ino`) handles the kinematics, face dis
 
 [**> Go to Firmware Docs**](firmware/README.md)
 
-<img width="50%" height="1164" alt="firmware-preview" src="https://github.com/user-attachments/assets/31da32af-55a4-45e9-99ca-ff8f9b4767cd" />
 
 ---
 

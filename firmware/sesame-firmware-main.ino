@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <DNSServer.h>
+#include <ESPmDNS.h>
 #include <Wire.h>
 #include <ESP32Servo.h>
 #include <Adafruit_GFX.h>
@@ -14,10 +15,21 @@
 #define AP_SSID  "Sesame-Controller"
 #define AP_PASS  "12345678" // Must be at least 8 characters
 
+// --- Station Mode Configuration (Optional) ---
+// Set these to connect to your home/office WiFi network
+// Leave NETWORK_SSID empty to disable station mode
+#define NETWORK_SSID ""  // Your WiFi network name
+#define NETWORK_PASS ""  // Your WiFi password
+#define ENABLE_NETWORK_MODE false  // Set to true to enable network connection attempts
+
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
 #define OLED_I2C_ADDR 0x3C
+
+// I2C Pins for Distro Board V2
+//#define I2C_SDA 8
+//#define I2C_SCL 9
 
 // I2C Pins for Distro Board
 //#define I2C_SDA 21
@@ -37,7 +49,7 @@ WebServer server(80);
 
 // Global state for animations
 String currentCommand = "";
-String currentFaceName = "defualt";
+String currentFaceName = "default";
 const unsigned char* const* currentFaceFrames = nullptr;
 uint8_t currentFaceFrameCount = 0;
 uint8_t currentFaceFrameIndex = 0;
@@ -60,12 +72,20 @@ int wifiScrollPos = 0;
 unsigned long lastWifiScrollMs = 0;
 String wifiInfoText = "";
 
+// Network Mode
+bool networkConnected = false;
+IPAddress networkIP;
+String deviceHostname = "sesame-robot";
+
 // Servo Pins for Distro Board
 // ======================================================================
 // Pin numbers are coorisponding to the ESP32 GPIO pins and may differ based on which board you use.
 // If you are using a different board, please adjust the servoPins array accordingly.
 // ======================================================================
 Servo servos[8];
+// Sesame Distro Board V2 Pinout
+//const int servoPins[8] = {4, 5, 6, 7, 15, 16, 17, 18};
+
 // Sesame Distro Board Pinout
 //const int servoPins[8] = {15, 2, 23, 19, 4, 16, 17, 18};
 
@@ -131,7 +151,26 @@ const FaceFpsEntry faceFpsEntries[] = {
   { "crab", 1 },
   { "idle", 1 },
   { "idle_blink", 7 },
-  { "defualt", 1 },
+  { "default", 1 },
+  // Conversational faces (manually controlled by Python - no auto-animation)
+  { "happy", 1 },
+  { "talk_happy", 1 },
+  { "sad", 1 },
+  { "talk_sad", 1 },
+  { "angry", 1 },
+  { "talk_angry", 1 },
+  { "surprised", 1 },
+  { "talk_surprised", 1 },
+  { "sleepy", 1 },
+  { "talk_sleepy", 1 },
+  { "love", 1 },
+  { "talk_love", 1 },
+  { "excited", 1 },
+  { "talk_excited", 1 },
+  { "confused", 1 },
+  { "talk_confused", 1 },
+  { "thinking", 1 },
+  { "talk_thinking", 1 },
 };
 
 
@@ -150,6 +189,8 @@ int getFaceFpsForName(const String& faceName);
 bool pressingCheck(String cmd, int ms);
 void handleGetSettings();
 void handleSetSettings();
+void handleGetStatus();
+void handleApiCommand();
 void updateWifiInfoScroll();
 void recordInput();
 
@@ -178,9 +219,14 @@ void handleCommandWeb() {
   }
   else if (server.hasArg("motor") && server.hasArg("value")) {
     int motorNum = server.arg("motor").toInt();
+    int servoIdx = servoNameToIndex(server.arg("motor"));
     int angle = server.arg("value").toInt();
     if (motorNum >= 1 && motorNum <= 8 && angle >= 0 && angle <= 180) {
       setServoAngle(motorNum - 1, angle); // Convert 1-based to 0-based index
+      recordInput();
+      server.send(200, "text/plain", "OK");
+    } else if (servoIdx != -1 && angle >= 0 && angle <= 180) {
+      setServoAngle(servoIdx, angle);
       recordInput();
       server.send(200, "text/plain", "OK");
     } else {
@@ -210,6 +256,107 @@ void handleSetSettings() {
   server.send(200, "text/plain", "OK");
 }
 
+// API endpoint for network clients to get robot status
+void handleGetStatus() {
+  String json = "{";
+  json += "\"currentCommand\":\"" + currentCommand + "\",";
+  json += "\"currentFace\":\"" + currentFaceName + "\",";
+  json += "\"networkConnected\":" + String(networkConnected ? "true" : "false") + ",";
+  json += "\"apIP\":\"" + WiFi.softAPIP().toString() + "\"";
+  if (networkConnected) {
+    json += ",\"networkIP\":\"" + networkIP.toString() + "\"";
+  }
+  json += "}";
+  server.send(200, "application/json", json);
+}
+
+// API endpoint for network clients to send commands (JSON-based)
+void handleApiCommand() {
+  if (server.method() != HTTP_POST) {
+    server.send(405, "application/json", "{\"error\":\"Method not allowed\"}");
+    return;
+  }
+  
+  String body = server.arg("plain");
+  
+  Serial.println("API Command received:");
+  Serial.println(body);
+  
+  // Check for face-only command (no movement)
+  int faceOnlyStart = body.indexOf("\"face\":\"");
+  if (faceOnlyStart == -1) {
+    faceOnlyStart = body.indexOf("\"face\": \"");
+  }
+  
+  // If we have a face but no command field, it's face-only
+  bool faceOnly = (faceOnlyStart > 0 && body.indexOf("\"command\":") == -1 && body.indexOf("\"command\": ") == -1);
+  
+  String command = "";
+  String face = "";
+  
+  // Parse face
+  if (faceOnlyStart > 0) {
+    faceOnlyStart = body.indexOf("\"", faceOnlyStart + 6) + 1;
+    int faceEnd = body.indexOf("\"", faceOnlyStart);
+    if (faceEnd > faceOnlyStart) {
+      face = body.substring(faceOnlyStart, faceEnd);
+      Serial.print("Parsed face: ");
+      Serial.println(face);
+    }
+  }
+  
+  // Parse command (if not face-only)
+  if (!faceOnly) {
+    int cmdStart = body.indexOf("\"command\":\"");
+    if (cmdStart == -1) {
+      cmdStart = body.indexOf("\"command\": \"");
+    }
+    
+    if (cmdStart == -1) {
+      Serial.println("Error: command field not found");
+      server.send(400, "application/json", "{\"error\":\"Missing command field\"}");
+      return;
+    }
+    
+    cmdStart = body.indexOf("\"", cmdStart + 10) + 1;
+    int cmdEnd = body.indexOf("\"", cmdStart);
+    
+    if (cmdEnd <= cmdStart) {
+      Serial.println("Error: invalid command format");
+      server.send(400, "application/json", "{\"error\":\"Invalid command format\"}");
+      return;
+    }
+    
+    command = body.substring(cmdStart, cmdEnd);
+    Serial.print("Parsed command: ");
+    Serial.println(command);
+  }
+  
+  // Set face if provided
+  if (face.length() > 0) {
+    setFace(face);
+  }
+  
+  // If face-only, just acknowledge
+  if (faceOnly) {
+    recordInput();
+    server.send(200, "application/json", "{\"status\":\"ok\",\"message\":\"Face updated\"}");
+    return;
+  }
+  
+  // Execute command
+  if (command == "stop") {
+    currentCommand = "";
+    recordInput();
+    server.send(200, "application/json", "{\"status\":\"ok\",\"message\":\"Command stopped\"}");
+  } else {
+    currentCommand = command;
+    recordInput();
+    exitIdle();
+    server.send(200, "application/json", "{\"status\":\"ok\",\"message\":\"Command executed\"}");
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   randomSeed(micros());
@@ -227,11 +374,42 @@ void setup() {
   display.setTextColor(SSD1306_WHITE);
   display.setTextSize(1);
   display.setCursor(0,0);
-  display.println(F("Creating WiFi..."));
+  display.println(F("Setting up WiFi..."));
   display.display();
 
+  // --- WIFI CONFIGURATION ---
+  // Try to connect to network first if configured
+  if (ENABLE_NETWORK_MODE && String(NETWORK_SSID).length() > 0) {
+    Serial.println("Attempting to connect to network: " + String(NETWORK_SSID));
+    WiFi.mode(WIFI_AP_STA); // Enable both AP and Station modes
+    WiFi.setHostname(deviceHostname.c_str());
+    WiFi.begin(NETWORK_SSID, NETWORK_PASS);
+    
+    // Wait up to 10 seconds for connection
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+      delay(500);
+      Serial.print(".");
+      attempts++;
+    }
+    
+    if (WiFi.status() == WL_CONNECTED) {
+      networkConnected = true;
+      networkIP = WiFi.localIP();
+      Serial.println();
+      Serial.print("Connected to network! IP: ");
+      Serial.println(networkIP);
+    } else {
+      Serial.println();
+      Serial.println("Failed to connect to network. Running in AP-only mode.");
+      WiFi.mode(WIFI_AP); // Fall back to AP-only
+    }
+  } else {
+    WiFi.mode(WIFI_AP);
+    Serial.println("Network mode disabled. Running in AP-only mode.");
+  }
+  
   // --- ACCESS POINT CONFIGURATION ---
-  WiFi.mode(WIFI_AP);
   WiFi.softAP(AP_SSID, AP_PASS);
   IPAddress myIP = WiFi.softAPIP();
   
@@ -239,12 +417,27 @@ void setup() {
   Serial.println(myIP);
 
   // Build WiFi info text for scrolling
-  wifiInfoText = "Connect to WiFi: " + String(AP_SSID) + "  |  Pass: " + String(AP_PASS) + "  |  Captive Portal will auto-open!  |  ";
+  if (networkConnected) {
+    wifiInfoText = "AP: " + String(AP_SSID) + " (" + myIP.toString() + ")  |  Network: " + String(NETWORK_SSID) + " (" + networkIP.toString() + ") or " + deviceHostname + ".local  |  ";
+  } else {
+    wifiInfoText = "Connect to WiFi: " + String(AP_SSID) + "  |  Pass: " + String(AP_PASS) + "  |  IP: " + myIP.toString() + "  |  Captive Portal will auto-open!  |  ";
+  }
   
   // Initialize input tracking
   lastInputTime = millis();
   firstInputReceived = false;
   showingWifiInfo = false;
+
+  // Start mDNS responder for local network discovery
+  if (MDNS.begin(deviceHostname.c_str())) {
+    Serial.println("mDNS responder started");
+    Serial.print("Access controller at: http://");
+    Serial.print(deviceHostname);
+    Serial.println(".local");
+    MDNS.addService("http", "tcp", 80);
+  } else {
+    Serial.println("Error setting up mDNS responder!");
+  }
 
   // Start DNS Server for Captive Portal
   // This redirects ALL domain requests to the ESP32's IP
@@ -255,6 +448,10 @@ void setup() {
   server.on("/cmd", handleCommandWeb);
   server.on("/getSettings", handleGetSettings);
   server.on("/setSettings", handleSetSettings);
+  
+  // API endpoints for network communication
+  server.on("/api/status", handleGetStatus);
+  server.on("/api/command", handleApiCommand);
   
   // Catch-all route for captive portal
   // This ensures any URL redirects to the controller page
@@ -444,7 +641,7 @@ void setFace(const String& faceName) {
   if (currentFaceFrameCount == 0) {
     currentFaceFrames = face_defualt_frames;
     currentFaceFrameCount = countFrames(face_defualt_frames, MAX_FACE_FRAMES);
-    currentFaceName = "defualt";
+    currentFaceName = "default";
     currentFaceFps = getFaceFpsForName(currentFaceName);
   }
 

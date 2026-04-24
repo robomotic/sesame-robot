@@ -14,16 +14,16 @@ Note: There are 3 different top cover styles currently available. **Enclosed v91
 
 | Component       | Supports Required | STL Link |
 |-----------------|-------------------|----------|
-| Joint R1        | No                | [femurjoint-R1-v90.stl](stl/femurjoint-R1-v90.stl) |
-| Joint R2        | No                | [femurjoint-R2-v90.stl](stl/femurjoint-R2-v90.stl) |
-| Joint R3        | No                | [foot-joint-R3-v90.stl](stl/foot-joint-R3-v90.stl) |
-| Joint R4        | No                | [foot-joint-R4-v90.stl](stl/foot-joint-R4-v90.stl) |
-| Joint L1        | No                | [femurjoint-L1-v90.stl](stl/femurjoint-L1-v90.stl) |
-| Joint L2        | No                | [femurjoint-L2-v90.stl](stl/femurjoint-L2-v90.stl) |
-| Joint L3        | No                | [foot-joint-L3-v90.stl](stl/foot-joint-L3-v90.stl) |
-| Joint L4        | No                | [foot-joint-L4-v90.stl](stl/foot-joint-L4-v90.stl) |
-| Internal Frame  | No                | [internal-frame-v90.stl](stl/internal-frame-v90.stl) |
-| Bottom Cover    | No                | [bottom-cover-v90.stl](stl/bottom-cover-v90.stl) |
+| Joint R1        | No                | [R1-v117.stl](stl/R1-v117.stl) |
+| Joint R2        | No                | [R2-v117.stl](stl/R2-v117.stl) |
+| Joint R3        | No                | [R3-v117.stl](stl/R3-v117.stl) |
+| Joint R4        | No                | [R4-v117.stl](stl/R4-v117.stl) |
+| Joint L1        | No                | [L1-v117.stl](stl/L1-v117.stl) |
+| Joint L2        | No                | [L2-v117.stl](stl/L2-v117.stl) |
+| Joint L3        | No                | [L3-v117.stl](stl/L3-v117.stl) |
+| Joint L4        | No                | [L4-v117.stl](stl/L4-v117.stl) |
+| Internal Frame  | No                | [Internal-Frame-v117.stl](stl/Internal-Frame-v117.stl) |
+| Bottom Cover    | No                | [Bottom-Cover-v117.stl](stl/Bottom-Cover-v117.stl) |
 | Top Cover       | Yes               | [Top Covers](stl/top-covers/) |
 
 

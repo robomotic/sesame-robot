@@ -11,6 +11,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 <head>
   <title>Sesame Access Point Controller</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
   <style>
     :root {
       --content-color: #ff8c42;

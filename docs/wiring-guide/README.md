@@ -6,10 +6,11 @@ Complete wiring guides for the Sesame Robot.
 
 ## Choosing a Wiring Approach
 
-The project supports two wiring strategies that suit different build constraints:
+The project supports multiple wiring strategies that suit different build constraints:
 
-- **Lolin S2 Mini / hand wiring (RECOMMENDED FOR NEW BUILDS):** Uses a Lolin S2 Mini, loose headers, and point-to-point wiring. It is the lowest-cost option, easy to source, supports USB-C PD for tethered power, but demands patience to keep the harness tidy and leaves less room for mistakes. **Critical: Use 30AWG wire for data lines and 22AWG for power—larger gauge wire will make assembly nearly impossible.**
-- **Sesame Distro Board V1 / ESP32-DevKitC-32E:** Uses the custom Distro Board V1 PCB stacked on an ESP32-DevKitC-32E. It front-loads the work into soldering headers and the buck converter but dramatically simplifies routing, labeling, and maintenance once assembled. Please note the V1 board is a prototype, has known issues, and cannot run on tethered USB-C power (battery + buck converter required). V2 is coming soon!
+- **Lolin S2 Mini / hand wiring (RECOMMENDED FOR DIY BUILDS):** Uses a Lolin S2 Mini, loose headers, and point-to-point wiring. It is the lowest-cost option, easy to source, supports USB-C PD for tethered power, but demands patience to keep the harness tidy and leaves less room for mistakes. **Critical: Use 30AWG wire for data lines and 22AWG for power—larger gauge wire will make assembly nearly impossible.**
+- **Sesame Distro Board V2 (INCLUDED IN BUILD KITS):** The latest custom PCB with SMD components, supports both USB-C PD and battery power. Pre-flashed and included with all Sesame Build Kits. Advanced to hand-solder; professional assembly recommended if ordering separately.
+- **Sesame Distro Board V1 / ESP32-DevKitC-32E (LEGACY):** Uses the custom Distro Board V1 PCB stacked on an ESP32-DevKitC-32E. Now phased out but still supported. V1 has known limitations and cannot run on tethered USB-C power (battery + buck converter required).
 
 Pick the approach that matches your component availability and comfort with managing wire bundles; the remainder of this guide dives into both workflows.
 
@@ -17,7 +18,9 @@ Pick the approach that matches your component availability and comfort with mana
 
 The Lolin S2 Mini method is a traditional protoboard build. Consult the S2 Mini wiring diagram below while reading this section; it captures every motor, sensor, OLED, and button lead even if the photos only show a subset of the connections. Expect a high connection count, so plan wire lengths and colors before soldering to avoid confusion later.
 
-<img src="s2-mini-wiring-guide.png" alt="S2 Mini wiring diagram" width="70%">
+<img src="s2-mini-wiring-guide-new.png" alt="S2 Mini wiring diagram" width="70%">
+
+*Credit to @captianeverypowersr on Discord for the new S2 mini guide.*
 
 ### Prep
 
@@ -39,6 +42,7 @@ The Lolin S2 Mini method is a traditional protoboard build. Consult the S2 Mini 
 You can now cut eight equal-length wires for data connections.
 
 **Wire Recommendations:**
+
 - **Data lines:** 30AWG silicone wire
 - **Power and ground:** 22AWG silicone wire
 - **Important:** Things will get super cluttered if you use large gauge wire
@@ -63,6 +67,7 @@ When packing electronics into the frame, it's difficult with the hand wiring set
 > Do not solder and de-solder connections with power connected!
 
 **Before powering on:**
+
 - Double check your power and ground lines before turning the robot on
 - Make sure to cover any exposed wires as they can touch the pin headers and fry the ESP32 (especially when cramming the cover on)
 
@@ -75,7 +80,7 @@ When packing electronics into the frame, it's difficult with the hand wiring set
 
 ### Overview
 
-> [!CAUTION]  
+> [!CAUTION]
 > UPDATE 1/20/26: Upon further testing, the Sesame distro board V1 will work, but it has a few issues that make it a little harder to assemble and will not run on teathered power (eg. USB C). Until V2 is released, I recommend using the S2 Mini / Hand Wiring approach. If you ordered a distro board V1, it will still be supported with wiring guides and firmware for the foreseeable future <3.
 
 This option provides a cleaner, more organized wiring solution.
@@ -89,6 +94,7 @@ Consult the distro-board wiring diagram below for exact connection locations.
 ### Component Installation
 
 **Optional components** (you can solder directly to pads instead):
+
 - 4-pin JST connector
 - 2-pin screw terminal
 
@@ -99,24 +105,29 @@ Consult the distro-board wiring diagram below for exact connection locations.
 A buck converter takes any voltage (5V-12V) and drops it to a stable 5V for the motors and ESP32.
 
 **If using a battery:**
+
 1. Make sure to solder the buck converter enable pads
 2. The buck converter is **required** for battery operation
 3. 2× 10440 Li-ion cells in a 2× AAA holder (2S, ~7.4 V nominal) work well with the buck and fit the chassis battery slot
 
 **Alternative power options:**
+
 - If you're using a benchtop supply or have another regulated 5V source
 - You can override the buck converter and take voltage directly from the screw terminal by soldering the override pads
 
 ### Battery Connection
+
 > [!CAUTION]
 > If your battery has an XT30 or JST RCY connector, don't cut it off and wire the battery directly to the distro board! This is unsafe and means you can't charge your battery anymore.
 
 **Proper method:**
+
 1. Get a female XT30 or JST RCY connector (matching your battery)
 2. Wire it to two wires that lead to the power terminal
 3. This allows you to safely connect and disconnect the battery
 
 **Note on 2× AAA holders with 10440 Li-ion cells:**
+
 - Treat this as a 2S Li-ion pack; wire the holder leads through the switch and buck converter.
 - **Always remove the 10440 cells from the holder and recharge them separately using a proper Li-ion charger.** Most AAA holders do not support safe Li-ion charging and attempting to charge in-holder can be dangerous.
 
@@ -134,4 +145,4 @@ More information is avalible in the [PCB](../../hardware/pcb/README.md) section 
 - Test connections before applying power
 - Keep wire runs as short and neat as possible
 - Label wires if helpful for troubleshooting
-- Take photos during assembly for reference 
+- Take photos during assembly for reference

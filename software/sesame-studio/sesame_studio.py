@@ -17,7 +17,7 @@ class SesameStudioApp:
             pass
         
         icon_path = os.path.join(os.path.dirname(__file__), "assets", "sesame-sticker2.png")
-        if os.path.exists(icon_path):
+        if os.name == "nt" and os.path.exists(icon_path): # this crashes on some linux
             try:
                 from PIL import Image, ImageTk
                 self.icon_photo = ImageTk.PhotoImage(Image.open(icon_path))
@@ -28,7 +28,6 @@ class SesameStudioApp:
                     self.root.iconphoto(True, self.icon_photo)
                 except Exception:
                     pass
-
         self.root.geometry("800x1300")
         self.root.configure(bg="#121212")
 
@@ -61,7 +60,7 @@ class SesameStudioApp:
         
         self.draw_robot_schematic()
         
-        self.servo_vars = []
+        self.servo_vars = {} # []
         self.create_servo_inputs()
 
         self.controls_frame = tk.Frame(self.main_frame, bg=self.bg_color)
@@ -146,10 +145,10 @@ class SesameStudioApp:
         cx, cy = 380, 180 
         
         configs = [
-            (2, cx - 100, cy - 100, "S2"), (6, cx - 220, cy - 120, "S6"), 
-            (0, cx + 100, cy - 100, "S0"), (5, cx + 220, cy - 120, "S5"), 
-            (3, cx - 100, cy + 100, "S3"), (7, cx - 220, cy + 120, "S7"), 
-            (1, cx + 100, cy + 100, "S1"), (4, cx + 220, cy + 120, "S4")  
+            ("L1", cx - 100, cy - 100, "L1"), ("L3", cx - 220, cy - 120, "L3"), 
+            ("R1", cx + 100, cy - 100, "R1"), ("R3", cx + 220, cy - 120, "R3"), 
+            ("L2", cx - 100, cy + 100, "L2"), ("L4", cx - 220, cy + 120, "L4"), 
+            ("R2", cx + 100, cy + 100, "R2"), ("R4", cx + 220, cy + 120, "R4")  
         ]
         
         self.servo_colors = {
@@ -164,7 +163,7 @@ class SesameStudioApp:
         }
 
 
-        self.servo_vars = [None] * 8
+        self.servo_vars = {} # [None] * 8
 
         for s_id, x, y, label in configs:
             f = tk.Frame(self.canvas, bg="#000000")
@@ -197,23 +196,32 @@ class SesameStudioApp:
             command_str = f"setServoAngle({servo_idx}, {angle}); "
             self.code_text.insert(tk.END, command_str, f"servo_{servo_idx}")
 
-        for i in range(4):
+        for i in ["R1","L2"]:
             try:
                 val = int(self.servo_vars[i].get())
-                if val < 0 or val > 180: raise ValueError
+                if val < 45 or val > 180: raise ValueError
                 insert_command(i, val)
             except ValueError:
-                messagebox.showerror("Error", f"Invalid angle for Servo {i}")
+                messagebox.showerror("Error", f"Invalid angle for Servo {i}, range is 45 - 180")
                 return
-        self.code_text.insert(tk.END, "\n")
         
-        for i in range(4, 8):
+        for i in ["R2","L1"]:
+            try:
+                val = int(self.servo_vars[i].get())
+                if val < 0 or val > 135: raise ValueError
+                insert_command(i, val)
+            except ValueError:
+                messagebox.showerror("Error", f"Invalid angle for Servo {i}, range is 0 - 135")
+                return
+        
+        self.code_text.insert(tk.END, "\n")
+        for i in ["R3","R4","L3","L4"]:
             try:
                 val = int(self.servo_vars[i].get())
                 if val < 0 or val > 180: raise ValueError
                 insert_command(i, val)
             except ValueError:
-                messagebox.showerror("Error", f"Invalid angle for Servo {i}")
+                messagebox.showerror("Error", f"Invalid angle for Servo {i}, range is 0 - 180")
                 return
         self.code_text.insert(tk.END, "\n")
         
