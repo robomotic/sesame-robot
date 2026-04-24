@@ -103,10 +103,10 @@ const char index_html[] PROGMEM = R"rawliteral(
     .trim-row{display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.2);padding:8px 12px;border-radius:8px}
     .trim-label{font-size:14px;font-weight:600;color:#fff;width:30px}
     .trim-value{font-size:14px;color:var(--content-color);width:35px;text-align:center;font-weight:600}
-    .btn-trim-minus,.btn-trim-plus{width:36px;height:36px;padding:0;font-size:20px;font-weight:bold;border-radius:8px}
+    .btn-trim-minus,.btn-trim-plus{width:40px;height:40px;padding:0;font-size:22px;font-weight:bold;border-radius:8px;-webkit-appearance:none;appearance:none;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
     .btn-trim-minus{background:linear-gradient(145deg,#e74c3c,#c0392b);color:#fff}
     .btn-trim-plus{background:linear-gradient(145deg,#2ecc71,#27ae60);color:#fff}
-    .btn-save-trims,.btn-reset-trims{color:#fff;padding:12px;font-size:14px;border-radius:8px}
+    .btn-save-trims,.btn-reset-trims{color:#fff;padding:12px;font-size:14px;border-radius:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
     .btn-save-trims{background:linear-gradient(145deg,var(--content-color),var(--content-color-dark))}
     .btn-reset-trims{background:linear-gradient(145deg,#555,#444)}
     
