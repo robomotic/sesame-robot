@@ -99,10 +99,14 @@ int8_t servoSubtrim[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 // Track current target angle for each servo (for real-time trim updates)
 int currentServoAngle[8] = {90, 90, 90, 90, 90, 90, 90, 90};
 
+// Set to true to enable saving/loading subtrim values from NVS
+#define SAVE_TRIMS false
+
 // NVS for persistent storage
 Preferences prefs;
 
 void saveSubtrimToNVS() {
+  if (!SAVE_TRIMS) return;
   prefs.begin("sesame", false);
   prefs.putBytes("subtrim", servoSubtrim, sizeof(servoSubtrim));
   prefs.end();
@@ -110,6 +114,10 @@ void saveSubtrimToNVS() {
 }
 
 void loadSubtrimFromNVS() {
+  if (!SAVE_TRIMS) {
+    Serial.println("NVS loading disabled, using default subtrim values");
+    return;
+  }
   prefs.begin("sesame", true);
   size_t len = prefs.getBytesLength("subtrim");
   if (len == sizeof(servoSubtrim)) {
