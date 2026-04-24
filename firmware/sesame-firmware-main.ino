@@ -96,6 +96,9 @@ const int servoPins[8] = {15, 2, 23, 19, 4, 16, 17, 18};
 // Subtrim values for each servo (offset in degrees)
 int8_t servoSubtrim[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
+// Track current target angle for each servo (for real-time trim updates)
+int currentServoAngle[8] = {90, 90, 90, 90, 90, 90, 90, 90};
+
 // NVS for persistent storage
 Preferences prefs;
 
@@ -121,6 +124,14 @@ void loadSubtrimFromNVS() {
     Serial.println("No subtrim values in NVS, using defaults");
   }
   prefs.end();
+}
+
+void applySubtrimToCurrentPose() {
+  for (int i = 0; i < 8; i++) {
+    int adjustedAngle = constrain(currentServoAngle[i] + servoSubtrim[i], 0, 180);
+    servos[i].write(adjustedAngle);
+    delay(5);
+  }
 }
 
 
@@ -404,6 +415,7 @@ void handleSetSubtrim() {
     int value = server.arg("value").toInt();
     if (motorNum >= 1 && motorNum <= 8 && value >= -90 && value <= 90) {
       servoSubtrim[motorNum - 1] = (int8_t)value;
+      applySubtrimToCurrentPose();
       saveSubtrimToNVS();
       recordInput();
       server.send(200, "text/plain", "OK");
@@ -417,6 +429,7 @@ void handleSetSubtrim() {
 
 void handleResetSubtrim() {
   for (int i = 0; i < 8; i++) servoSubtrim[i] = 0;
+  applySubtrimToCurrentPose();
   saveSubtrimToNVS();
   recordInput();
   server.send(200, "text/plain", "OK");
@@ -623,6 +636,7 @@ void loop() {
         }
         else if (strncmp(command_buffer, "subtrim reset", 13) == 0 || strncmp(command_buffer, "st reset", 8) == 0) {
           for (int i = 0; i < 8; i++) servoSubtrim[i] = 0;
+          applySubtrimToCurrentPose();
           saveSubtrimToNVS();
           Serial.println("All subtrim values reset to 0 and saved to NVS");
         }
@@ -633,6 +647,7 @@ void loop() {
             if (trimMotor >= 0 && trimMotor < 8) {
               if (trimValue >= -90 && trimValue <= 90) {
                 servoSubtrim[trimMotor] = trimValue;
+                applySubtrimToCurrentPose();
                 saveSubtrimToNVS();
                 Serial.print("Motor "); Serial.print(trimMotor); Serial.print(" subtrim set to ");
                 if (trimValue >= 0) Serial.print("+");
@@ -834,6 +849,7 @@ void updateIdleBlink() {
 // ====== HELPERS ======
 void setServoAngle(uint8_t channel, int angle) { 
   if (channel < 8) {
+    currentServoAngle[channel] = angle;
     int adjustedAngle = constrain(angle + servoSubtrim[channel], 0, 180);
     servos[channel].write(adjustedAngle);
     delayWithFace(motorCurrentDelay);
