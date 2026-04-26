@@ -142,6 +142,11 @@ void applySubtrimToCurrentPose() {
   }
 }
 
+// Animation constants
+int frameDelay = 100;
+int walkCycles = 10;
+int motorCurrentDelay = 40; // ms delay between motor movements to prevent over-current
+
 void saveSettingsToNVS() {
   prefs.begin("sesame", false);
   prefs.putInt("frameDelay", frameDelay);
@@ -173,11 +178,6 @@ void loadSettingsFromNVS() {
   Serial.print("  motorCurrentDelay: "); Serial.println(motorCurrentDelay);
   Serial.print("  faceFps: "); Serial.println(faceFps);
 }
-
-// Animation constants
-int frameDelay = 100;
-int walkCycles = 10;
-int motorCurrentDelay = 40; // ms delay between motor movements to prevent over-current
 
 struct FaceEntry {
   const char* name;
