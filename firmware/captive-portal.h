@@ -232,12 +232,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         <h4>Motor Settings</h4>
         <label>Motor Current Delay (ms):</label>
         <input type="number" id="motorCurrentDelay" min="0" max="500" step="1">
-        <label>Motor Speed:</label>
-        <select id="motorSpeed">
-          <option value="slow">Slow</option>
-          <option value="medium" selected>Medium</option>
-          <option value="fast">Fast</option>
-        </select>
       </div>
 
       <div class="settings-section">
@@ -449,8 +443,7 @@ function openSettings() {
   fetch('/getSettings').then(r => r.json()).then(data => {
     document.getElementById('frameDelay').value = data.frameDelay || 100;
     document.getElementById('walkCycles').value = data.walkCycles || 10;
-    document.getElementById('motorCurrentDelay').value = data.motorCurrentDelay || 20;
-    document.getElementById('motorSpeed').value = data.motorSpeed || 'medium';
+    document.getElementById('motorCurrentDelay').value = data.motorCurrentDelay || 40;
     
     // Load theme settings
     const savedColor = localStorage.getItem('themeColor') || '#ff8c42';
@@ -573,7 +566,6 @@ function saveSettings() {
   const fd = document.getElementById('frameDelay').value;
   const wc = document.getElementById('walkCycles').value;
   const mcd = document.getElementById('motorCurrentDelay').value;
-  const ms = document.getElementById('motorSpeed').value;
   
   // Save theme color
   const colorSelect = document.getElementById('themeColor');
@@ -582,7 +574,7 @@ function saveSettings() {
   localStorage.setItem('themeColor', themeColor);
   applyTheme(themeColor);
   
-  fetch(`/setSettings?frameDelay=${fd}&walkCycles=${wc}&motorCurrentDelay=${mcd}&motorSpeed=${ms}`)
+  fetch(`/setSettings?frameDelay=${fd}&walkCycles=${wc}&motorCurrentDelay=${mcd}`)
     .then(() => closeSettings())
     .catch(() => closeSettings());
 }

@@ -146,7 +146,7 @@ void applySubtrimToCurrentPose() {
 // Animation constants
 int frameDelay = 100;
 int walkCycles = 10;
-int motorCurrentDelay = 20; // ms delay between motor movements to prevent over-current
+int motorCurrentDelay = 40; // ms delay between motor movements to prevent over-current
 
 struct FaceEntry {
   const char* name;
