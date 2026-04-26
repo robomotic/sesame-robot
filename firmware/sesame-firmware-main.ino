@@ -142,6 +142,37 @@ void applySubtrimToCurrentPose() {
   }
 }
 
+void saveSettingsToNVS() {
+  prefs.begin("sesame", false);
+  prefs.putInt("frameDelay", frameDelay);
+  prefs.putInt("walkCycles", walkCycles);
+  prefs.putInt("motorCurrentDelay", motorCurrentDelay);
+  prefs.putInt("faceFps", faceFps);
+  prefs.end();
+  Serial.println("Settings saved to NVS");
+}
+
+void loadSettingsFromNVS() {
+  prefs.begin("sesame", true);
+  if (prefs.isKey("frameDelay")) {
+    frameDelay = prefs.getInt("frameDelay");
+  }
+  if (prefs.isKey("walkCycles")) {
+    walkCycles = prefs.getInt("walkCycles");
+  }
+  if (prefs.isKey("motorCurrentDelay")) {
+    motorCurrentDelay = prefs.getInt("motorCurrentDelay");
+  }
+  if (prefs.isKey("faceFps")) {
+    faceFps = prefs.getInt("faceFps");
+  }
+  prefs.end();
+  Serial.println("Settings loaded from NVS:");
+  Serial.print("  frameDelay: "); Serial.println(frameDelay);
+  Serial.print("  walkCycles: "); Serial.println(walkCycles);
+  Serial.print("  motorCurrentDelay: "); Serial.println(motorCurrentDelay);
+  Serial.print("  faceFps: "); Serial.println(faceFps);
+}
 
 // Animation constants
 int frameDelay = 100;
@@ -303,6 +334,7 @@ void handleSetSettings() {
   if (server.hasArg("walkCycles")) walkCycles = server.arg("walkCycles").toInt();
   if (server.hasArg("motorCurrentDelay")) motorCurrentDelay = server.arg("motorCurrentDelay").toInt();
   if (server.hasArg("faceFps")) faceFps = (int)max(1L, server.arg("faceFps").toInt());
+  saveSettingsToNVS();
   server.send(200, "text/plain", "OK");
 }
 
@@ -448,6 +480,9 @@ void setup() {
   
   // Load subtrim values from NVS
   loadSubtrimFromNVS();
+  
+  // Load settings from NVS
+  loadSettingsFromNVS();
   
   // I2C Init for ESP32
   Wire.begin(I2C_SDA, I2C_SCL);
