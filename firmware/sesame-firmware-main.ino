@@ -160,16 +160,20 @@ void saveSettingsToNVS() {
 void loadSettingsFromNVS() {
   prefs.begin("sesame", true);
   if (prefs.isKey("frameDelay")) {
-    frameDelay = prefs.getInt("frameDelay");
+    int val = prefs.getInt("frameDelay");
+    if (val > 0) frameDelay = val;
   }
   if (prefs.isKey("walkCycles")) {
-    walkCycles = prefs.getInt("walkCycles");
+    int val = prefs.getInt("walkCycles");
+    if (val > 0) walkCycles = val;
   }
   if (prefs.isKey("motorCurrentDelay")) {
-    motorCurrentDelay = prefs.getInt("motorCurrentDelay");
+    int val = prefs.getInt("motorCurrentDelay");
+    if (val >= 0) motorCurrentDelay = val;
   }
   if (prefs.isKey("faceFps")) {
-    faceFps = prefs.getInt("faceFps");
+    int val = prefs.getInt("faceFps");
+    if (val > 0) faceFps = val;
   }
   prefs.end();
   Serial.println("Settings loaded from NVS:");
@@ -682,6 +686,14 @@ void loop() {
           applySubtrimToCurrentPose();
           saveSubtrimToNVS();
           Serial.println("All subtrim values reset to 0 and saved to NVS");
+        }
+        else if (strcmp(command_buffer, "settings reset") == 0) {
+          frameDelay = 100;
+          walkCycles = 10;
+          motorCurrentDelay = 40;
+          faceFps = 8;
+          saveSettingsToNVS();
+          Serial.println("Settings reset to defaults and saved to NVS");
         }
         else if (strncmp(command_buffer, "subtrim ", 8) == 0 || strncmp(command_buffer, "st ", 3) == 0) {
           const char* params = (command_buffer[1] == 't') ? command_buffer + 3 : command_buffer + 8;
