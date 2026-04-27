@@ -817,3 +817,215 @@ This eliminates the need to manually update multiple switch statements or arrays
 2.  **Calibration**: Use the Serial Monitor (115200) to send manual step commands (e.g., `rn wf`).
 3.  **Power Management**: If the robot brownouts during movement, increase `motorCurrentDelay` in the web settings to further stagger servo bursts.
 
+## ESP-NOW Firmware (Low-Latency Wireless)
+
+An alternative firmware variant that replaces WiFi-based HTTP control with direct ESP-NOW radio communication. This version achieves sub-5ms latency and eliminates the need for an access point or WiFi router.
+
+### Why Switch to ESP-NOW?
+
+| Feature | WiFi Firmware (`sesame-firmware-main.ino`) | ESP-NOW Firmware (`sesame-firmware-espnow.ino`) |
+|---------|---------------------------------------------|-------------------------------------------------|
+| Control method | WiFi AP + HTTP server | ESP-NOW radio binary protocol |
+| Latency | 20–100 ms (HTTP overhead) | 1–5 ms round-trip |
+| Network setup | Requires AP connection, captive portal | Peer-to-peer, zero configuration |
+| Interface | Web UI on phone/laptop | Serial/USB from computer or Raspberry Pi |
+| Power consumption | Higher (WiFi AP active) | Lower (radio only when transmitting) |
+| Reliability | TCP/IP stack, reconnection delays | Simple UDP-like packets, immediate |
+| Sensor data streaming | Polling via HTTP requests | Can push sensor data asynchronously (future) |
+
+### Hardware Setup
+
+**You need two ESP32 boards:**
+1. **Robot:** ESP32-S3 with Sesame Distro Board (flashed with `sesame-firmware-espnow.ino`)
+2. **Controller:** ESP32-C3 Mini (flashed with `ESP32_C3_Sesame.ino`) connected to your computer via USB
+
+The two boards communicate wirelessly — no wiring needed. The controller acts as a USB serial bridge, converting text commands from your computer into ESP-NOW binary packets for the robot.
+
+### Getting Started
+
+#### 1. Flash the Robot (ESP32-S3)
+
+1. Open `firmware/sesame-firmware-espnow.ino` in Arduino IDE
+2. Board: **ESP32S3 Dev Module**
+3. Install libraries: `ESP32Servo` v3.0.9, `Adafruit SSD1306`, `Adafruit GFX`
+4. Upload
+5. Open Serial Monitor (115200 baud) and copy the MAC address:
+   ```
+   === Sesame Robot (ESP-NOW) ===
+   MAC Address: DC:54:75:C8:43:00
+   ```
+
+#### 2. Flash the Controller (ESP32-C3 Mini)
+
+1. Open `software/esp-now/ESP32_C3_Sesame/ESP32_C3_Sesame.ino` in Arduino IDE
+2. Board: **ESP32C3 Dev Module**
+3. Upload
+4. Serial Monitor at 115200 baud
+5. Tell the controller the robot's MAC:
+   ```
+   SET_ROBOT_MAC DC:54:75:C8:43:00
+   ```
+   This is saved to flash — run it once.
+
+#### 3. Test
+
+```
+PING
+```
+Should respond:
+```
+PONG rtt=1.23ms
+```
+
+```
+CMD wave
+```
+Robot waves.
+
+**That's it.** Full command reference: `software/esp-now/ESP32_C3_Sesame/README.md`
+
+### WiFi Channel Configuration
+
+Both boards must use the same ESP-NOW channel (1–13). Default is channel 1.
+
+**To avoid interference with your WiFi router:**
+- If router uses channel 1 → set ESP-NOW to 6 or 11
+- If router uses channel 6 → set ESP-NOW to 1 or 11
+- If router uses channel 11 → set ESP-NOW to 1 or 6
+
+On controller: `CHANNEL 6` (persisted)
+On robot: change `#define ESPNOW_CHANNEL` in `espnow-protocol.h` and reflash.
+
+Use the `WiFi_Channel_Scanner` sketch to find clear channels.
+
+### Protocol Overview
+
+Messages are binary structs over ESP-NOW. Controller ↔ Computer uses newline-terminated text. See `software/esp-now/espnow-protocol.h` for all struct definitions.
+
+```
+Computer           Controller (ESP32-C3)           Robot (ESP32-S3)
+────────           ────────────────────           ─────────────────
+"CMD wave\n"  ──→  parse  ──→  sesame_motion_cmd_t  ──→  onEspNowRecv()
+                            {msg_type=0x01,           ↓
+                             command="wave"}      ──→  currentCommand="wave"
+                                                      runWavePose()
+                                              ──→  send ACK
+                                                        ↓
+"OK\n"         ◄──  (ACK received)  ◄────────────────
+```
+
+### Serial Command Reference
+
+Connect to the controller's USB serial port at **115200 baud**:
+
+#### Motions
+```
+CMD forward   CMD backward   CMD left   CMD right
+CMD rest      CMD stand      CMD wave   CMD dance
+CMD swim      CMD point      CMD pushup CMD bow
+CMD cute      CMD freaky     CMD worm   CMD shake
+CMD shrug     CMD dead       CMD crab
+STOP
+```
+
+#### Faces
+```
+FACE happy      FACE sad        FACE angry     FACE surprised
+FACE sleepy     FACE love       FACE excited   FACE confused
+FACE thinking   FACE idle       FACE default   FACE talk_happy
+FACE talk_sad   ... (all talk_* variants)
+```
+
+#### Servos
+```
+SERVO 0 135           → Set motor R1 to 135°
+SERVO_ALL 90          → All motors to 90°
+```
+Channels: 0=R1 1=R2 2=L1 3=L2 4=R4 5=R3 6=L3 7=L4
+
+#### Trims
+```
+TRIM_SET 0 5          → +5° offset on motor R1
+TRIM_GET              → Print all 8 trims
+TRIM_RESET            → Zero all trims and save
+```
+
+#### Configuration
+```
+CONFIG_SET frameDelay 120
+CONFIG_SET walkCycles 15
+CONFIG_SET motorCurrentDelay 60
+CONFIG_SET faceFps 12
+CONFIG_GET
+```
+
+#### System
+```
+STATUS       → cmd=<current> face=<current>
+PING         → PONG rtt=<ms>
+MAC          → Show controller's MAC
+CHANNEL      → Show current channel
+CHANNEL 6    → Change channel (restart required)
+SET_ROBOT_MAC DC:54:75:C8:43:00 → Persist robot MAC
+HELP         → Show full help
+```
+
+### Python Control Example
+
+```python
+import serial, time
+
+ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+time.sleep(2)
+
+def cmd(c):
+    ser.write(f"{c}\n".encode())
+    time.sleep(0.1)
+    print(ser.read_all().decode())
+
+cmd("PING")
+cmd("CMD wave")
+cmd("FACE happy")
+cmd("TRIM_GET")
+ser.close()
+```
+
+### Serial Debug on the Robot
+
+The robot's serial port has a full CLI that works alongside ESP-NOW:
+
+```
+help                → Show all debug commands
+mac                 → Print robot MAC + channel
+rn wf               → Walk forward
+rn st               → Stand pose
+0 90                → Set motor 0 to 90°
+all 90              → Set all motors to 90°
+subtrim             → List trim values
+st 3 10             → Set motor 3 trim +10°
+settings reset      → Reset to defaults
+```
+
+See `software/esp-now/DEBUG_CHECKS.md` for the full troubleshooting guide.
+
+### Files
+
+| File | Description |
+|------|-------------|
+| `firmware/sesame-firmware-espnow.ino` | Robot firmware, ESP-NOW receiver (ESP32-S3) |
+| `software/esp-now/ESP32_C3_Sesame/ESP32_C3_Sesame.ino` | Controller firmware (ESP32-C3) |
+| `software/esp-now/espnow-protocol.h` | Shared binary protocol header |
+| `software/esp-now/DEBUG_CHECKS.md` | Quick debug reference |
+
+### Troubleshooting Quick Table
+
+| Symptom | Likely Cause | Fix |
+|---------|--------------|-----|
+| `PING` times out | Robot MAC unknown to controller | `SET_ROBOT_MAC <robot_mac>` |
+| No command response | Channel mismatch | Ensure both use `ESPNOW_CHANNEL` = same value |
+| Latency >20 ms | Far apart / interference | Move closer; use channel 6/11; scan with WiFi scanner |
+| Controller says "peer not registered" | Robot never received first packet | Send `PING`; check robot log for auto-registration |
+| Servo jitter | `motorCurrentDelay` too low | `CONFIG_SET motorCurrentDelay 80` |
+
+Full debug reference: `software/esp-now/DEBUG_CHECKS.md`
+

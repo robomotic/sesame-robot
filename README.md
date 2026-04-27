@@ -83,6 +83,7 @@ A modified version of the original L4 foot joint, drilled to accommodate the LEG
 *   **Emotive Display:** Features a 128x64 OLED screen acting as a reactive face that syncs with movement.
 *   **Fully Printable:** Designed entirely for 3D printing in PLA with minimal supports.
 *   **Network Connectivity:** Connect to your WiFi network for remote control and API access.
+*   **ESP-NOW Wireless:** Optional ESP-NOW firmware for sub-5ms latency, peer-to-peer control without WiFi (requires second ESP32 board).
 *   **JSON API:** RESTful API for programmatic control from Python, JavaScript, and more.
 *   **Conversational Faces:** Expressive emotion library with talk variants for voice assistant projects.
 *   **Sesame Studio:** New animation composer software to easily create custom movements.
@@ -120,6 +121,14 @@ Upload the code from the **[Firmware Directory](firmware/README.md)**.
 *   Requires Arduino IDE
 *   Configure WiFi AP settings
 
+#### Optional: ESP-NOW Low-Latency Firmware
+For sub-5ms control via USB serial (no WiFi needed), flash the ESP-NOW variant instead:
+1. Flash **Robot** with `firmware/sesame-firmware-espnow.ino` (ESP32-S3)
+2. Flash **Controller** with `software/esp-now/ESP32_C3_Sesame/ESP32_C3_Sesame.ino` (ESP32-C3 Mini, plugged into your computer)
+3. Set robot MAC in controller via serial: `SET_ROBOT_MAC <robot_mac>`
+4. Send `PING` to verify connection
+*See [ESP-NOW docs](software/esp-now/ESP32_C3_Sesame/README.md) for full details.*
+
 ### 5. Create Animations 
 Use **[Sesame Studio](software/sesame-studio/README.md)** to visually design poses and sequences for your robot.
 
@@ -156,6 +165,22 @@ The Sesame Companion App is a Python-based application that enables advanced con
 The Companion App works with robots running the latest firmware with network mode enabled.
 
 [**> Go to Sesame Companion App Repository**](https://github.com/dorianborian/sesame-companion-app)
+
+### ESP-NOW Firmware (Low-Latency Wireless)
+
+An alternative firmware that replaces WiFi-based control with ESP-NOW radio protocol for sub-5ms latency and simpler setup (no access point needed). Controlled via USB serial from any computer or Raspberry Pi.
+
+*   **Extremely low latency** — 1-5 ms round trip vs 20-100 ms over HTTP
+*   **No WiFi router needed** — peer-to-peer ESP-NOW radio link
+*   **Universal control** — Python, Node.js, shell scripts, or any serial terminal
+*   **Bidirectional** — send commands and query status, trims, config
+*   **Reserved for future sensors** — protocol includes MPU6050 data slots
+
+**Hardware:** ESP32-S3 (robot) + ESP32-C3 Mini (USB bridge)
+
+[**> Go to ESP-NOW Documentation**](software/esp-now/ESP32_C3_Sesame/README.md)
+
+[**> Quick Debug Reference**](software/esp-now/DEBUG_CHECKS.md)
 
 ### Firmware
 The ESP32 firmware (`sesame-firmware-main.ino`) handles the kinematics, face display, and WiFi control interface.
