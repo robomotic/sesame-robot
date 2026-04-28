@@ -67,6 +67,8 @@
 #define CONFIG_KEY_WALK_CYCLES        0x02
 #define CONFIG_KEY_MOTOR_CURRENT_DLY  0x03
 #define CONFIG_KEY_FACE_FPS           0x04
+#define CONFIG_KEY_SENSOR_MODE        0x05  // 0=off, 1=accel, 2=gyro, 3=magneto, 4=rpy
+#define CONFIG_KEY_SENSOR_RATE        0x06  // ms between sensor updates (0=off)
 
 // ============================================================================
 // Payload Size Limits
@@ -169,6 +171,8 @@ typedef struct __attribute__((packed)) {
   int16_t walkCycles;
   int16_t motorCurrentDelay;
   int16_t faceFps;
+  int16_t sensorMode;      // 0=off, 1=accel, 2=gyro, 3=magneto, 4=rpy
+  int16_t sensorRate;      // ms between sensor updates (0=off)
 } sesame_config_data_t;
 
 // MSG_STATUS_DATA (0x83) - Robot status
@@ -185,16 +189,16 @@ typedef struct __attribute__((packed)) {
   uint32_t robot_timestamp_us; // Robot's timestamp when it received ping
 } sesame_pong_t;
 
-// MSG_SENSOR_DATA (0x85) - Future: MPU6050 accelerometer data
+// MSG_SENSOR_DATA (0x85) - MPU6050 sensor data
+// mode: 0=off, 1=accel, 2=gyro, 3=magneto, 4=rpy
 typedef struct __attribute__((packed)) {
   sesame_msg_header_t header;
-  float ax;
-  float ay;
-  float az;
-  float gx;               // Gyroscope X (future)
-  float gy;               // Gyroscope Y (future)
-  float gz;               // Gyroscope Z (future)
-  uint32_t timestamp_us;
+  uint8_t  mode;              // Sensor mode (1=accel, 2=gyro, 3=magneto, 4=rpy)
+  float    ax, ay, az;        // Acceleration (m/s^2)
+  float    gx, gy, gz;        // Gyroscope (rad/s)
+  float    mx, my, mz;        // Magnetometer (uT)
+  float    roll, pitch, yaw;  // Orientation angles (radians)
+  uint32_t timestamp_us;      // Microsecond timestamp
 } sesame_sensor_data_t;
 
 // ============================================================================

@@ -26,6 +26,10 @@
 // Adjust this path if the file is located elsewhere relative to your sketch.
 #include "../software/esp-now/espnow-protocol.h"
 
+// MPU6050 support
+#include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
+
 // ============================================================================
 // ESP-NOW Configuration
 // ============================================================================
@@ -147,12 +151,31 @@ int frameDelay = 100;
 int walkCycles = 10;
 int motorCurrentDelay = 40;
 
+// ============================================================================
+// MPU6050 Sensor Configuration
+// ============================================================================
+Adafruit_MPU6050 mpu;
+
+// Sensor mode: 0=off, 1=accel, 2=gyro, 3=magneto, 4=rpy
+int sensorMode = 0;
+// Sensor update rate in ms (0 = off)
+int sensorRate = 0;
+unsigned long lastSensorUpdate = 0;
+
+// Sensor data
+float ax = 0, ay = 0, az = 0;
+float gx = 0, gy = 0, gz = 0;
+float mx = 0, my = 0, mz = 0;
+float roll = 0, pitch = 0, yaw = 0;
+
 void saveSettingsToNVS() {
   prefs.begin("sesame", false);
   prefs.putInt("frameDelay", frameDelay);
   prefs.putInt("walkCycles", walkCycles);
   prefs.putInt("motorCurrentDelay", motorCurrentDelay);
   prefs.putInt("faceFps", faceFps);
+  prefs.putInt("sensorMode", sensorMode);
+  prefs.putInt("sensorRate", sensorRate);
   prefs.end();
   Serial.println("Settings saved to NVS");
 }
@@ -175,12 +198,20 @@ void loadSettingsFromNVS() {
     int val = prefs.getInt("faceFps");
     if (val > 0) faceFps = val;
   }
+  if (prefs.isKey("sensorMode")) {
+    sensorMode = prefs.getInt("sensorMode");
+  }
+  if (prefs.isKey("sensorRate")) {
+    sensorRate = prefs.getInt("sensorRate");
+  }
   prefs.end();
   Serial.println("Settings loaded from NVS:");
   Serial.print("  frameDelay: "); Serial.println(frameDelay);
   Serial.print("  walkCycles: "); Serial.println(walkCycles);
   Serial.print("  motorCurrentDelay: "); Serial.println(motorCurrentDelay);
   Serial.print("  faceFps: "); Serial.println(faceFps);
+  Serial.print("  sensorMode: "); Serial.println(sensorMode);
+  Serial.print("  sensorRate: "); Serial.println(sensorRate);
 }
 
 // ============================================================================
@@ -448,13 +479,21 @@ void onEspNowRecv(const esp_now_recv_info_t *recv_info, const uint8_t *data, int
             motorCurrentDelay = cmd->value;
             Serial.printf("[ESP-NOW] Config motorCurrentDelay = %d\n", motorCurrentDelay);
             break;
-          case CONFIG_KEY_FACE_FPS:
-            faceFps = max(1, (int)cmd->value);
-            Serial.printf("[ESP-NOW] Config faceFps = %d\n", faceFps);
-            break;
-          default:
-            valid = false;
-            break;
+           case CONFIG_KEY_FACE_FPS:
+             faceFps = max(1, (int)cmd->value);
+             Serial.printf("[ESP-NOW] Config faceFps = %d\n", faceFps);
+             break;
+           case CONFIG_KEY_SENSOR_MODE:
+             sensorMode = cmd->value;
+             Serial.printf("[ESP-NOW] Config sensorMode = %d\n", sensorMode);
+             break;
+           case CONFIG_KEY_SENSOR_RATE:
+             sensorRate = cmd->value;
+             Serial.printf("[ESP-NOW] Config sensorRate = %d\n", sensorRate);
+             break;
+           default:
+             valid = false;
+             break;
         }
         if (valid) {
           saveSettingsToNVS();
@@ -531,6 +570,8 @@ void sendConfigData(uint8_t msgId) {
   msg.walkCycles = (int16_t)walkCycles;
   msg.motorCurrentDelay = (int16_t)motorCurrentDelay;
   msg.faceFps = (int16_t)faceFps;
+  msg.sensorMode = (int16_t)sensorMode;
+  msg.sensorRate = (int16_t)sensorRate;
   sendToController((uint8_t*)&msg, sizeof(msg));
 }
 
@@ -554,6 +595,52 @@ void sendPong(uint8_t msgId, uint32_t origTimestamp) {
   sendToController((uint8_t*)&msg, sizeof(msg));
 }
 
+void sendSensorData(uint8_t msgId) {
+  sesame_sensor_data_t msg;
+  memset(&msg, 0, sizeof(msg));
+  sesame_msg_init(&msg.header, MSG_SENSOR_DATA, msgId);
+  msg.mode = (uint8_t)sensorMode;
+  msg.ax = ax; msg.ay = ay; msg.az = az;
+  msg.gx = gx; msg.gy = gy; msg.gz = gz;
+  msg.mx = mx; msg.my = my; msg.mz = mz;
+  msg.roll = roll; msg.pitch = pitch; msg.yaw = yaw;
+  msg.timestamp_us = micros();
+  sendToController((uint8_t*)&msg, sizeof(msg));
+}
+
+void updateSensorData() {
+  if (sensorMode == 0 || sensorRate == 0) return;
+  
+  unsigned long now = millis();
+  if (now - lastSensorUpdate < (unsigned long)sensorRate) return;
+  lastSensorUpdate = now;
+
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
+
+  // Acceleration in m/s^2
+  ax = a.acceleration.x;
+  ay = a.acceleration.y;
+  az = a.acceleration.z;
+
+  // Gyroscope in rad/s
+  gx = g.gyro.x * 0.0174533f;  // deg/s to rad/s
+  gy = g.gyro.y * 0.0174533f;
+  gz = g.gyro.z * 0.0174533f;
+
+  // Magnetometer not available on MPU6050
+  mx = my = mz = 0;
+
+  // Compute roll, pitch from accelerometer (simple)
+  roll  = atan2(a.acceleration.y, a.acceleration.z);
+  pitch = atan2(-a.acceleration.x, sqrt(a.acceleration.y*a.acceleration.y + a.acceleration.z*a.acceleration.z));
+  yaw = 0;  // No magnetometer, yaw not available
+
+  // Send sensor data via ESP-NOW
+  static uint8_t sensorMsgId = 0;
+  sendSensorData(sensorMsgId++);
+}
+
 // ============================================================================
 // Setup
 // ============================================================================
@@ -569,6 +656,18 @@ void setup() {
 
   // I2C Init for ESP32
   Wire.begin(I2C_SDA, I2C_SCL);
+
+  // MPU6050 Init
+  if (sensorMode > 0 && sensorRate > 0) {
+    if (mpu.begin()) {
+      Serial.println(F("MPU6050 found and initialized"));
+      mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
+      mpu.setGyroRange(MPU6050_GYRO_RANGE_250_DEG);
+      mpu.setFilterBandwidth(MPU6050_BAND_42_HZ);
+    } else {
+      Serial.println(F("MPU6050 not found on I2C bus"));
+    }
+  }
 
   // OLED Init
   if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR)) {
@@ -670,6 +769,9 @@ void loop() {
   // Update face animations
   updateAnimatedFace();
   updateIdleBlink();
+
+  // Update sensor data (if enabled)
+  updateSensorData();
 
   // Process motion commands (set by ESP-NOW or serial CLI)
   if (currentCommand != "") {

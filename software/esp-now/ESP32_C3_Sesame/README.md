@@ -183,14 +183,21 @@ All commands are text, one per line, newline terminated (`\n`). Connect to the E
 | `CONFIG_SET walkCycles <n>` | Walk cycles per command (default: 10) |
 | `CONFIG_SET motorCurrentDelay <ms>` | Delay between servo moves (default: 40) |
 | `CONFIG_SET faceFps <n>` | Face animation FPS (default: 8) |
+| `CONFIG_SET sensorMode <n>` | Sensor mode: 0=off, 1=accel, 2=gyro, 3=magneto, 4=rpy |
+| `CONFIG_SET sensorRate <ms>` | Sensor update rate in ms (0=off) |
 | `CONFIG_GET` | Get all config values |
+
+### Sensor Commands
+
+| Command | Description |
+|---------|-------------|
+| `PING` | `PONG rtt=<ms>` | Round-trip latency |
+| `STATUS` | `STATUS cmd=<motion> face=<name>` | Current robot state |
 
 ### System Commands
 
 | Command | Response | Description |
 |---------|----------|-------------|
-| `STATUS` | `STATUS cmd=<motion> face=<name>` | Current robot state |
-| `PING` | `PONG rtt=<ms>` | Round-trip latency |
 | `MAC` | `MAC <aa:bb:cc:dd:ee:ff>` | Controller MAC address |
 | `CHANNEL [n]` | `CHANNEL <n>` | Get/set ESP-NOW channel |
 | `SET_ROBOT_MAC <mac>` | `OK ...` | Set robot MAC (persisted) |
@@ -204,9 +211,10 @@ All commands are text, one per line, newline terminated (`\n`). Connect to the E
 | `OK SENT` | Command sent, awaiting robot acknowledgement |
 | `ERR <message>` | Error with description |
 | `TRIM <v0> ... <v7>` | Subtrim values for all 8 servos |
-| `CONFIG frameDelay=... walkCycles=... ...` | All config values |
+| `CONFIG frameDelay=... walkCycles=... motorCurrentDelay=... faceFps=... sensorMode=... sensorRate=...` | All config values |
 | `STATUS cmd=... face=...` | Robot status |
 | `PONG rtt=<ms>` | Round-trip time |
+| `SENSOR mode=<n> ax=... ay=... az=... gx=... gy=... gz=... mx=... my=... mz=... roll=... pitch=... yaw=...` | MPU6050 sensor data |
 
 ## ESP-NOW Binary Protocol
 

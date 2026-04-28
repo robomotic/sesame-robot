@@ -139,8 +139,9 @@ void OnDataRecv(const esp_now_recv_info_t *recv_info, const uint8_t *data, int d
     case MSG_CONFIG_DATA: {
       if (data_len >= (int)sizeof(sesame_config_data_t)) {
         const sesame_config_data_t* cd = (const sesame_config_data_t*)data;
-        Serial.printf("CONFIG frameDelay=%d walkCycles=%d motorCurrentDelay=%d faceFps=%d\n",
-          cd->frameDelay, cd->walkCycles, cd->motorCurrentDelay, cd->faceFps);
+        Serial.printf("CONFIG frameDelay=%d walkCycles=%d motorCurrentDelay=%d faceFps=%d sensorMode=%d sensorRate=%d\n",
+          cd->frameDelay, cd->walkCycles, cd->motorCurrentDelay, cd->faceFps,
+          cd->sensorMode, cd->sensorRate);
         pendingResponse = false;
       }
       break;
@@ -169,8 +170,9 @@ void OnDataRecv(const esp_now_recv_info_t *recv_info, const uint8_t *data, int d
     case MSG_SENSOR_DATA: {
       if (data_len >= (int)sizeof(sesame_sensor_data_t)) {
         const sesame_sensor_data_t* sd = (const sesame_sensor_data_t*)data;
-        Serial.printf("SENSOR ax=%.3f ay=%.3f az=%.3f gx=%.3f gy=%.3f gz=%.3f\n",
-          sd->ax, sd->ay, sd->az, sd->gx, sd->gy, sd->gz);
+        Serial.printf("SENSOR mode=%d ax=%.3f ay=%.3f az=%.3f gx=%.3f gy=%.3f gz=%.3f mx=%.3f my=%.3f mz=%.3f roll=%.3f pitch=%.3f yaw=%.3f\n",
+          sd->mode, sd->ax, sd->ay, sd->az, sd->gx, sd->gy, sd->gz,
+          sd->mx, sd->my, sd->mz, sd->roll, sd->pitch, sd->yaw);
       }
       break;
     }
@@ -639,6 +641,8 @@ uint8_t configKeyFromString(const char* key) {
   if (strcmp(lower, "walkcycles") == 0)          return CONFIG_KEY_WALK_CYCLES;
   if (strcmp(lower, "motorcurrentdelay") == 0)   return CONFIG_KEY_MOTOR_CURRENT_DLY;
   if (strcmp(lower, "facefps") == 0)             return CONFIG_KEY_FACE_FPS;
+  if (strcmp(lower, "sensormode") == 0)          return CONFIG_KEY_SENSOR_MODE;
+  if (strcmp(lower, "sensordelay") == 0 || strcmp(lower, "sensorrate") == 0) return CONFIG_KEY_SENSOR_RATE;
   return 0;
 }
 
@@ -672,6 +676,7 @@ void printHelp() {
   Serial.println("Config:");
   Serial.println("  CONFIG_SET <key> <val>  Set config parameter");
   Serial.println("    Keys: frameDelay, walkCycles, motorCurrentDelay, faceFps");
+  Serial.println("          sensorMode, sensorRate");
   Serial.println("  CONFIG_GET              Get all config values");
   Serial.println();
   Serial.println("System:");
