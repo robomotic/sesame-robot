@@ -28,6 +28,128 @@ python play.py --checkpoint-file logs/<run>/model_<n>.pt    # play a specific ch
 tensorboard --logdir logs                                   # monitor training
 ```
 
+## Configuration
+
+All experiment configurations are in [`config.py`](config.py). The file is organized into sections:
+
+- **Robot**: URDF paths, joint mappings, default poses, actuator gains
+- **Sim-to-real fidelity**: Hardware-realistic defaults (actuator delay, motor model, sensor noise)
+- **Scene / simulation**: Number of parallel environments, episode length, termination conditions
+- **Observations**: Which sensor readings are fed to the policy (can enable/disable for sim-to-real transfer)
+- **Rewards**: Reward functions and weights for the velocity-tracking task
+- **Events**: Domain randomization and perturbations (push robot, encoder bias, etc.)
+- **Commands**: Velocity command curriculum for progressive learning
+- **Training (PPO)**: Hyperparameters for the rsl_rl PPO trainer
+- **Helpers**: Functions to get enabled configs
+
+Key configuration flags for sim-to-real transfer:
+- `OBS_JOINT_VEL_ENABLED`: Set to `False` to disable velocity observations (not available on real hardware)
+- `OBS_BASE_LIN_VEL_ENABLED`: Set to `False` to disable linear velocity observations (MPU6050 limitation)
+- `ACTUATOR_DC_MOTOR_ENABLED`: Set to `True` to use realistic DC motor model (requires retraining)
+- `OBS_JOINT_POS_DELAY_ENABLED`: Set to `True` to simulate open-loop servo delay
+- `IMU_NOISE_ENABLED`: Set to `True` to add IMU noise matching MPU6050 specs
+
+### Simulation Timesteps & Control Frequency
+
+The simulation uses a two-level timing approach based on the comments in config.py:
+
+1. **Physics Timestep (`dt`)**: 5ms (0.005s) - defined in the base mjlab velocity config as `mujoco.timestep = 0.005`
+2. **Decimation**: 4 - meaning the simulation advances 4 physics steps per control step
+3. **Control Frequency**: 50Hz - calculated as `1 / (dt * decimation) = 1 / (0.005 * 4) = 50Hz`
+
+This means:
+- Each control step (policy inference) corresponds to 20ms of simulated time
+- The policy runs at 50Hz (every 20ms)
+- Within each control step, the physics simulator runs 4 sub-steps of 5ms each
+- Actuator delays are specified in physics steps: 40ms hardware delay = 8 physics steps at 5ms/dt
+
+These values can be verified in:
+- `env_cfg.py`: Uses `sesame_flat_env_cfg()` which builds on the base velocity config
+- `config.py`: Lines 63-75 document the timing relationships
+- `validate.py`: Line 79 shows `dt = env_cfg.decimation * env_cfg.sim.mujoco.timestep` calculation
+
+## Running Experiments
+
+### Training
+
+Run a standard PPO training experiment:
+
+```bash
+python train.py
+```
+
+This will:
+- Use the experiment name from `config.EXPERIMENT_NAME` ("sesame_velocity")
+- Run for `config.MAX_ITERATIONS` (10,000) PPO iterations
+- Use `config.NUM_ENVS` (4096) parallel environments
+- Save logs to `logs/<timestamp>/` and checkpoints every 100 iterations
+- Use seed `config.SEED` (1) for reproducibility
+
+### Customizing Training
+
+Override any config parameter via command line:
+
+```bash
+# Smoke test with fewer iterations
+python train.py --max-iterations 20
+
+# Custom experiment name
+python train.py --run-name my_first_run
+
+# Reduce parallel environments (for limited VRAM)
+python train.py --num-envs 1024
+
+# Change random seed
+python train.py --seed 42
+
+# Combine multiple overrides
+python train.py --max-iterations 500 --run-name test --num-envs 2048
+```
+
+### Evaluation / Visualization
+
+View the latest trained policy:
+
+```bash
+python play.py
+```
+
+This auto-loads the newest checkpoint from `logs/<timestamp>/` and runs it with the Viser web viewer.
+
+To load a specific checkpoint:
+
+```bash
+python play.py --checkpoint-file logs/2026-05-03_10-30-00/model_500.pt
+```
+
+Use the native MuJoCo viewer instead of Viser:
+
+```bash
+python play.py --viewer native
+```
+
+### Monitoring Training
+
+Launch TensorBoard to view training metrics:
+
+```bash
+tensorboard --logdir logs
+```
+
+This will show:
+- Reward curves (episode reward, individual reward components)
+- Policy losses (actor/critic loss, entropy, KL divergence)
+- Command tracking performance
+- Episode length and success statistics
+
+## Experiment Workflow
+
+1. **Modify config.py** to adjust robot/sim settings, rewards, or curriculum
+2. **Run training**: `python train.py [--max-iterations N] [--run-name NAME]`
+3. **Monitor progress**: `tensorboard --logdir logs`
+4. **Evaluate**: `python play.py` or `python play.py --checkpoint-file PATH/TO/MODEL.PT`
+5. **Iterate**: Adjust config based on results and repeat
+
 ---
 
 ## Layout
