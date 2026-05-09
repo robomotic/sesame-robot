@@ -141,7 +141,7 @@ REWARDS = {
 # ---------------------------------------------------------------------------
 # ![TODO] Play with these
 EVENTS = {
-    "push_robot":    {"enabled": True},
+    "push_robot":    {"enabled": False},
     "encoder_bias":  {"enabled": True},
     "foot_friction": {"enabled": True},
     "base_com":      {"enabled": True},
@@ -192,7 +192,7 @@ PPO = {
         "schedule": "adaptive",
         "gamma": 0.99,
         "lam": 0.95,
-        "desired_kl": 0.02,
+        "desired_kl": 0.01,
         "max_grad_norm": 1.0,
     },
 

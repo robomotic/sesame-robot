@@ -150,13 +150,31 @@ python sequences.py --sequence walk --cycles 5
 python sequences.py
 ```
 
+### Web UI — switching sequences at runtime
+
+When using the default Viser viewer a **Sequence** dropdown appears at the
+top of the control panel (above the built-in Controls / Visualization /
+Groups tabs). Selecting a different sequence takes effect immediately on the
+next simulation step — no restart required.
+
+The dropdown is pre-selected to whatever `--sequence` was passed on the
+command line, or `(all)` if none was given.
+
+The native MuJoCo viewer (`--viewer native`) does not have a GUI API and
+falls back to command-line selection only.
+
 ### Architecture
 
 `SequencePlayer` is a policy-compatible callable that steps through a list
 of `Keyframe` objects (each a complete 8-servo angle snapshot + duration in
-ms). It advances to the next keyframe when the current one expires, cycles
-indefinitely, and is passed directly to `ViserPlayViewer` or
-`NativeMujocoViewer` — the same viewer used by `validate.py` and `play.py`.
+ms). It advances to the next keyframe when the current one expires and
+cycles indefinitely. A `threading.Lock` guards all state so the Viser
+callback thread (dropdown changes) and the sim-loop thread (policy calls)
+never race.
+
+`sequences.py` creates its own `viser.ViserServer` and adds the Sequence
+dropdown before handing the server to `ViserPlayViewer`. The viewer appends
+its own tabs to the same server, so everything appears in one panel.
 
 The `_Builder` helper mirrors the firmware's stateful `setServoAngle` +
 `delayWithFace` pattern: servo state is cumulative across calls, and each

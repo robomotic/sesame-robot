@@ -21,9 +21,11 @@ from __future__ import annotations
 
 import argparse
 import math
+import threading
 from typing import NamedTuple
 
 import torch
+import viser
 
 from mjlab.envs import ManagerBasedRlEnv
 from mjlab.rl import RslRlVecEnvWrapper
@@ -374,6 +376,9 @@ class SequencePlayer:
 
     Compatible with ViserPlayViewer / NativeMujocoViewer — call it like a
     policy: player(obs) → action tensor of shape (1, n_joints).
+
+    Thread-safe: the web UI dropdown calls load_sequence() from the viser
+    callback thread while the sim loop calls __call__() from the main thread.
     """
 
     def __init__(
@@ -385,29 +390,38 @@ class SequencePlayer:
         control_dt_s: float,
         device: str,
     ) -> None:
-        self._keyframes = keyframes
         self._joint_names = joint_names
         self._default_angles = default_angles
         self._action_scale = action_scale
         self._control_dt_s = control_dt_s
         self._device = device
+        self._lock = threading.Lock()
+        self._keyframes = keyframes
         self._kf_idx = 0
         self._steps_remaining = 0
 
+    def load_sequence(self, keyframes: list[Keyframe]) -> None:
+        """Swap to a new sequence immediately; resets to first keyframe."""
+        with self._lock:
+            self._keyframes = keyframes
+            self._kf_idx = 0
+            self._steps_remaining = 0
+
     def __call__(self, _obs) -> torch.Tensor:
-        if self._steps_remaining <= 0:
-            self._kf_idx = (self._kf_idx + 1) % len(self._keyframes)
-            kf = self._keyframes[self._kf_idx]
-            self._steps_remaining = max(
-                1, round(kf.duration_ms / 1000.0 / self._control_dt_s)
+        with self._lock:
+            if self._steps_remaining <= 0:
+                self._kf_idx = (self._kf_idx + 1) % len(self._keyframes)
+                kf = self._keyframes[self._kf_idx]
+                self._steps_remaining = max(
+                    1, round(kf.duration_ms / 1000.0 / self._control_dt_s)
+                )
+            self._steps_remaining -= 1
+            action = _keyframe_to_action(
+                self._keyframes[self._kf_idx],
+                self._joint_names,
+                self._default_angles,
+                self._action_scale,
             )
-        self._steps_remaining -= 1
-        action = _keyframe_to_action(
-            self._keyframes[self._kf_idx],
-            self._joint_names,
-            self._default_angles,
-            self._action_scale,
-        )
         return action.unsqueeze(0).to(self._device)
 
 
@@ -485,8 +499,29 @@ def main() -> None:
         )
 
         wrapped = RslRlVecEnvWrapper(env, clip_actions=None)
-        viewer_cls = ViserPlayViewer if args.viewer == "viser" else NativeMujocoViewer
-        viewer_cls(wrapped, player).run()
+
+        if args.viewer == "viser":
+            server = viser.ViserServer(label="mjlab")
+            seq_options = ["(all)"] + list(registry.keys())
+            initial = args.sequence if args.sequence else "(all)"
+            seq_dropdown = server.gui.add_dropdown(
+                "Sequence", options=seq_options, initial_value=initial
+            )
+
+            @seq_dropdown.on_update
+            def _(_) -> None:
+                name = seq_dropdown.value
+                kfs = (
+                    [kf for seq in registry.values() for kf in seq]
+                    if name == "(all)"
+                    else registry[name]
+                )
+                player.load_sequence(kfs)
+
+            ViserPlayViewer(wrapped, player, viser_server=server).run()
+        else:
+            NativeMujocoViewer(wrapped, player).run()
+
         wrapped.close()
     finally:
         C.TERMINATE_ON_FALL = orig_terminate
