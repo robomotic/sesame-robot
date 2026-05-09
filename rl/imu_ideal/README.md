@@ -154,11 +154,18 @@ python sequences.py
 
 When using the default Viser viewer a **Sequence** dropdown appears at the
 top of the control panel (above the built-in Controls / Visualization /
-Groups tabs). Selecting a different sequence takes effect immediately on the
-next simulation step — no restart required.
+Groups tabs).
 
-The dropdown is pre-selected to whatever `--sequence` was passed on the
-command line, or `(all)` if none was given.
+**Switching behaviour:**
+1. The environment is reset — any accumulated velocity or tilt is cleared and
+   the robot is placed back at its safe starting pose.
+2. The player automatically prepends a `rest` keyframe before the new
+   sequence so the robot always returns to a neutral, grounded pose before
+   executing the next motion.
+
+The default selection is `rest` (or whatever `--sequence` was passed on the
+command line).  The `(all)` option cycles through every sequence in order,
+also starting from rest.
 
 The native MuJoCo viewer (`--viewer native`) does not have a GUI API and
 falls back to command-line selection only.

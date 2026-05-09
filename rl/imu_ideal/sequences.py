@@ -461,15 +461,16 @@ def main() -> None:
             print(name)
         return
 
-    if args.sequence is not None:
-        if args.sequence not in registry:
-            raise SystemExit(
-                f"Unknown sequence '{args.sequence}'. "
-                f"Available: {', '.join(registry)}"
-            )
-        keyframes = registry[args.sequence]
-    else:
-        keyframes = [kf for seq in registry.values() for kf in seq]
+    # Default to rest so the robot starts in a stable, grounded pose.
+    initial_seq = args.sequence if args.sequence is not None else "rest"
+    if initial_seq not in registry:
+        raise SystemExit(
+            f"Unknown sequence '{initial_seq}'. "
+            f"Available: {', '.join(registry)}"
+        )
+
+    # Always lead with rest so the robot settles before any motion starts.
+    keyframes = _seq_rest() + registry[initial_seq]
 
     orig_terminate = C.TERMINATE_ON_FALL
     orig_num_envs = C.NUM_ENVS
@@ -483,10 +484,7 @@ def main() -> None:
 
         joint_names = env.action_manager.get_term("joint_pos").target_names
         print(f"[sequences] joint order: {joint_names}")
-        print(
-            f"[sequences] playing: {args.sequence or 'all'} "
-            f"({len(keyframes)} keyframes)"
-        )
+        print(f"[sequences] playing: {initial_seq}")
 
         control_dt_s = env_cfg.decimation * env_cfg.sim.mujoco.timestep
         player = SequencePlayer(
@@ -503,22 +501,28 @@ def main() -> None:
         if args.viewer == "viser":
             server = viser.ViserServer(label="mjlab")
             seq_options = ["(all)"] + list(registry.keys())
-            initial = args.sequence if args.sequence else "(all)"
             seq_dropdown = server.gui.add_dropdown(
-                "Sequence", options=seq_options, initial_value=initial
+                "Sequence", options=seq_options, initial_value=initial_seq
             )
+
+            # Viewer must be created before the callback so we can close over
+            # viewer.request_reset() — that call is thread-safe (queued action).
+            viewer = ViserPlayViewer(wrapped, player, viser_server=server)
 
             @seq_dropdown.on_update
             def _(_) -> None:
                 name = seq_dropdown.value
-                kfs = (
-                    [kf for seq in registry.values() for kf in seq]
-                    if name == "(all)"
-                    else registry[name]
-                )
-                player.load_sequence(kfs)
+                if name == "(all)":
+                    new_kfs = [kf for seq in registry.values() for kf in seq]
+                else:
+                    new_kfs = registry[name]
+                # Prepend rest so the robot always returns to a neutral pose
+                # before executing the new sequence.  Reset the environment
+                # so any accumulated velocity or tilt is cleared first.
+                player.load_sequence(_seq_rest() + new_kfs)
+                viewer.request_reset()
 
-            ViserPlayViewer(wrapped, player, viser_server=server).run()
+            viewer.run()
         else:
             NativeMujocoViewer(wrapped, player).run()
 
