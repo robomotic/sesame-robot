@@ -199,7 +199,9 @@ def sesame_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     # These run before the OBSERVATIONS toggle sweep so disabled terms are
     # dropped cleanly by the sweep that follows.
 
-    # base_lin_vel: MPU6050 cannot measure linear velocity directly.
+    # base_lin_vel: estimated on hardware by integrating MPU6050 accelerometer readings
+    # (after subtracting gravity using DMP orientation). The estimate drifts; actor
+    # sees noisy version modelling that drift. Critic retains ground-truth for training.
     if not C.OBS_BASE_LIN_VEL_ENABLED:
         for group in ("actor", "critic"):
             cfg.observations[group].terms.pop("base_lin_vel", None)
@@ -228,6 +230,7 @@ def sesame_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
         for term_name, noise_std in (
             ("base_ang_vel",      C.IMU_GYRO_NOISE_STD),
             ("projected_gravity", C.IMU_ACCEL_NOISE_STD),
+            ("base_lin_vel",      C.IMU_LIN_VEL_NOISE_STD),
         ):
             term = cfg.observations["actor"].terms.get(term_name)
             if term is not None:

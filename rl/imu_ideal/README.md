@@ -45,11 +45,36 @@ All experiment configurations are in [`config.py`](config.py). The file is organ
 - **Helpers**: Functions to get enabled configs
 
 Key configuration flags for sim-to-real transfer:
-- `OBS_JOINT_VEL_ENABLED`: Set to `False` to disable velocity observations (not available on real hardware)
-- `OBS_BASE_LIN_VEL_ENABLED`: Set to `False` to disable linear velocity observations (MPU6050 limitation)
+- `OBS_JOINT_VEL_ENABLED`: `False` — no velocity sensor on hardware; policy infers joint state from commanded position history
+- `OBS_BASE_LIN_VEL_ENABLED`: `True` — velocity estimated on hardware by integrating MPU6050 accelerometer (after gravity removal via DMP orientation); sim models this with 0.2 m/s RMS Gaussian noise
 - `ACTUATOR_DC_MOTOR_ENABLED`: Set to `True` to use realistic DC motor model (requires retraining)
-- `OBS_JOINT_POS_DELAY_ENABLED`: Set to `True` to simulate open-loop servo delay
-- `IMU_NOISE_ENABLED`: Set to `True` to add IMU noise matching MPU6050 specs
+- `OBS_JOINT_POS_DELAY_ENABLED`: `True` — simulates 40–80 ms open-loop servo command latency with 3° noise
+- `IMU_NOISE_ENABLED`: `True` — adds MPU6050-calibrated Gaussian noise to gyro, accelerometer, and lin vel estimate
+
+### Observation space
+
+| Observation | Dim | Source on hardware | Noise modelled |
+|---|---|---|---|
+| `base_lin_vel` | 3 | Accelerometer integration via DMP | 0.2 m/s RMS drift |
+| `base_ang_vel` | 3 | MPU6050 gyroscope | 0.005 rad/s |
+| `projected_gravity` | 3 | MPU6050 accelerometer (DMP) | 0.004 (dimensionless) |
+| `joint_pos` | 8 | Last *commanded* angle (open-loop) | 0.05 rad + 40–80 ms delay |
+| `actions` | 8 | Previous policy output | — |
+| `command` | 3 | Target (vx, vy, wz) from joystick | — |
+| **Total** | **28** | | |
+
+`joint_vel` is excluded — no velocity sensor exists. The policy has an implicit proxy via `joint_pos − actions` (commanded rate).
+
+### Actor vs critic network
+
+The actor runs on the ESP32 at deployment; the critic is training-only.
+
+| | Hidden dims | ~Params | ~Size |
+|---|---|---|---|
+| Actor | (64, 128, 64) | 19 k | 75 KB |
+| Critic | (256, 512, 256, 128) | 303 k | 1.2 MB |
+
+The actor fits in ESP32 internal SRAM (~75 KB vs ~200 KB available). Observation normalization is left off; the 28-element input is already bounded by sensor ranges and the drift noise models.
 
 ### Simulation Timesteps & Control Frequency
 
@@ -318,8 +343,8 @@ Link / joint naming inherited from the Sesame project:
 	- [X] Starting orientation is garbage visually. Has no adverse effect, but would be nice if it was standing straight.
 - [ ] Check the [TODO] and [OPT] tags in [config.py](config.py)
     - [ ] Tune kp-kd values
-    - [ ] Make the NN small enough to fit ESP32
-    - [ ] Current observations are not realizable with existing hardware
+    - [X] Make the NN small enough to fit ESP32 — actor (64,128,64) ≈ 75 KB
+    - [X] Current observations are not realizable with existing hardware — lin vel now uses accelerometer-integration model; joint vel excluded; joint pos uses commanded angle + delay
     - [ ] Currently uses curriculum, can upgrade to hierarchical learning
     - [ ] Play with rewards for better locomotion
 - [ ] Terrain is flat, can upgrade to a rough terrain

@@ -82,13 +82,15 @@ OBS_JOINT_POS_NOISE_STD: float = 0.05    # rad (~3°; typical open-loop servo er
 # joint_vel: no velocity sensor on hardware — disable for a deployable policy.
 OBS_JOINT_VEL_ENABLED: bool = False
 
-# base_lin_vel: MPU6050 cannot measure linear velocity — disable for deployable policy.
-OBS_BASE_LIN_VEL_ENABLED: bool = False
+# base_lin_vel: estimated by integrating MPU6050 accelerometer (after gravity removal
+# via DMP orientation). Real estimate drifts at ~0.2 m/s RMS; modelled below.
+OBS_BASE_LIN_VEL_ENABLED: bool = True
 
 # IMU noise calibrated to MPU6050 datasheet: gyro ~0.005 rad/s, accel ~0.05 m/s².
 IMU_NOISE_ENABLED: bool = True
 IMU_GYRO_NOISE_STD: float = 0.005    # rad/s
 IMU_ACCEL_NOISE_STD: float = 0.004   # dimensionless (0.05 m/s² / 9.81 ≈ 0.005)
+IMU_LIN_VEL_NOISE_STD: float = 0.2   # m/s; models accelerometer-integration drift
 
 
 # ---------------------------------------------------------------------------
@@ -196,9 +198,10 @@ PPO = {
         "max_grad_norm": 1.0,
     },
 
-    # ![TODO] Need to keep the NN small to fit into ESP32
+    # Actor runs on the ESP32: (64,128,64) → ~19k params, ~75 KB (fits internal SRAM).
+    # Critic is training-only: kept larger for better value estimation.
     "actor": {
-        "hidden_dims": (256, 512, 256, 128),
+        "hidden_dims": (64, 128, 64),
         "activation": "elu",
         "obs_normalization": False,
         "distribution_cfg": {
