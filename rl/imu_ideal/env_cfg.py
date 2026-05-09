@@ -305,6 +305,19 @@ def sesame_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
         if not spec.get("enabled", True) or (name == "push_robot" and play):
             cfg.events.pop(name, None)
 
+    # Override push_robot with safe parameters for Sesame (6 cm ground clearance).
+    # The mjlab default includes z-velocity (±0.4 m/s) which drives feet into the
+    # ground plane and causes MuJoCo contact instability → NaN physics states.
+    if "push_robot" in cfg.events:
+        cfg.events["push_robot"].params["velocity_range"] = {
+            "x":     (-0.2, 0.2),
+            "y":     (-0.2, 0.2),
+            "z":     ( 0.0, 0.0),   # no vertical push — avoids ground penetration
+            "roll":  (-0.3, 0.3),
+            "pitch": (-0.3, 0.3),
+            "yaw":   (-0.5, 0.5),
+        }
+
     if C.EVENTS["foot_friction"]["enabled"]:
         cfg.events["foot_friction"].params["asset_cfg"] = SceneEntityCfg(
             "robot", geom_names=FOOT_GEOM_NAMES

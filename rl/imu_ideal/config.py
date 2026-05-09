@@ -123,9 +123,9 @@ OBSERVATIONS = {
 # ![TODO] Play with rewards
 REWARDS = {
     "track_linear_velocity":  {"enabled": True, "weight":  2.0},
-    "track_angular_velocity": {"enabled": True, "weight":  1.0},
+    "track_angular_velocity": {"enabled": True, "weight":  2.0},
     "upright":                {"enabled": True, "weight":  1.0},
-    "action_rate_l2":         {"enabled": True, "weight": -0.05},
+    "action_rate_l2":         {"enabled": True, "weight": -0.1},
     "foot_slip":              {"enabled": True, "weight": -0.05},
     "dof_pos_limits":         {"enabled": True, "weight": -1.0},
     "soft_landing":           {"enabled": True, "weight": -1e-5},
@@ -141,7 +141,7 @@ REWARDS = {
 # ---------------------------------------------------------------------------
 # ![TODO] Play with these
 EVENTS = {
-    "push_robot":    {"enabled": False},  # enable once un-perturbed policy walks
+    "push_robot":    {"enabled": True},
     "encoder_bias":  {"enabled": True},
     "foot_friction": {"enabled": True},
     "base_com":      {"enabled": True},
@@ -182,7 +182,7 @@ PPO = {
     "logger": "tensorboard",
 
     "algorithm": {
-        "value_loss_coef": 1.0,
+        "value_loss_coef": 0.5,
         "use_clipped_value_loss": True,
         "clip_param": 0.2,
         "entropy_coef": 0.01,
@@ -192,7 +192,7 @@ PPO = {
         "schedule": "adaptive",
         "gamma": 0.99,
         "lam": 0.95,
-        "desired_kl": 0.01,
+        "desired_kl": 0.02,
         "max_grad_norm": 1.0,
     },
 

@@ -5,12 +5,15 @@ Usage:
   python train.py --max-iterations 20          # smoke test
   python train.py --run-name my_experiment     # tag the log subdir
   python train.py --num-envs 2048              # override NUM_ENVS from config
+  python train.py --resume                     # resume from latest checkpoint
+  python train.py --resume --load-run 2026-05-09_07-48-45 --load-checkpoint model_7200.pt
 """
 
 from __future__ import annotations
 
 import argparse
 import os
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 
@@ -42,6 +45,14 @@ def _parse_args() -> argparse.Namespace:
                    help="Parallel environments (default from config.NUM_ENVS).")
     p.add_argument("--seed", type=int, default=C.SEED,
                    help="Random seed for env + agent.")
+    p.add_argument("--resume", action="store_true",
+                   help="Resume training from a previous checkpoint.")
+    p.add_argument("--load-run", type=str, default=".*",
+                   help="Regex or exact name of the run directory to resume from (default: latest).")
+    p.add_argument("--load-checkpoint", type=str, default="model_.*.pt",
+                   help="Regex or exact filename of the checkpoint to load (default: latest).")
+    p.add_argument("--nan-guard", action="store_true",
+                   help="Reset environments with NaN physics states instead of propagating them.")
     return p.parse_args()
 
 
@@ -54,6 +65,10 @@ def main() -> None:
     cfg.agent.seed = args.seed
     cfg.env.scene.num_envs = args.num_envs
     cfg.env.seed = args.seed
+    cfg.agent.resume = args.resume
+    cfg.agent.load_run = args.load_run
+    cfg.agent.load_checkpoint = args.load_checkpoint
+    cfg = replace(cfg, enable_nan_guard=args.nan_guard)
 
     # Flat log layout: logs/<timestamp>[_<run_name>]/
     log_dir_name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

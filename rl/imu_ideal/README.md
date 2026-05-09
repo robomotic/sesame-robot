@@ -22,6 +22,8 @@ Every observation, reward, event, curriculum stage, and PPO hyperparameter lives
 
 ```bash
 python validate.py                                          # sinusoidal joint drive, no policy
+python sequences.py --list                                  # list firmware gait sequences
+python sequences.py --sequence walk                         # replay a firmware sequence
 python train.py                                             # full PPO run
 python play.py                                              # auto-loads latest checkpoint
 python play.py --checkpoint-file logs/<run>/model_<n>.pt    # play a specific checkpoint
@@ -67,6 +69,101 @@ These values can be verified in:
 - `env_cfg.py`: Uses `sesame_flat_env_cfg()` which builds on the base velocity config
 - `config.py`: Lines 63-75 document the timing relationships
 - `validate.py`: Line 79 shows `dt = env_cfg.decimation * env_cfg.sim.mujoco.timestep` calculation
+
+## Firmware Sequence Replay (`sequences.py`)
+
+`sequences.py` translates the 19 pre-programmed motion sequences from
+[`firmware/movement-sequences.h`](../../firmware/movement-sequences.h) into
+MuJoCo simulation actions and replays them using the same environment and
+viewer stack as `validate.py`. Use it to verify gait geometry in simulation
+before deploying to hardware.
+
+### Motor ID → URDF Joint Mapping
+
+The firmware addresses servos by index (0–7). The mapping comes from the
+firmware `ServoName` enum and the robot's web UI slider labels:
+
+| Servo index | Web UI label | URDF joint | Role |
+|:-----------:|:------------:|:----------:|------|
+| 0 | S0 / R1 | Joint_R1 | Front-right hip |
+| 1 | S1 / R2 | Joint_R2 | Rear-right hip |
+| 2 | S2 / L1 | Joint_L1 | Front-left hip |
+| 3 | S3 / L2 | Joint_L2 | Rear-left hip |
+| 4 | S4 / R4 | Joint_R4 | Rear-right knee |
+| 5 | S5 / R3 | Joint_R3 | Front-right knee |
+| 6 | S6 / L3 | Joint_L3 | Front-left knee |
+| 7 | S7 / L4 | Joint_L4 | Rear-left knee |
+
+### Angle Conversion
+
+Firmware angles are degrees [0, 180]. They are converted to MuJoCo actions via:
+
+```
+target_rad = servo_degrees × π / 180
+action[i]  = (target_rad − default_angle[joint]) / ACTION_SCALE
+```
+
+where `default_angle` comes from `config.DEFAULT_JOINT_ANGLES` and
+`ACTION_SCALE` is `config.ACTION_SCALE`.
+
+### Available Sequences
+
+All 19 sequences are translated 1-to-1 from the firmware:
+
+| Name | Description | Notes |
+|------|-------------|-------|
+| `rest` | All servos to 90° | Flat rest pose |
+| `stand` | Hip/knee to standing pose | Baseline upright stance |
+| `wave` | Left arm wave | 4 cycles |
+| `dance` | Hip sway with knee bounce | 5 cycles |
+| `swim` | Hip alternation | 4 cycles |
+| `point` | Extended pointing pose | 2 s hold |
+| `pushup` | Front knee push-up | 4 reps |
+| `bow` | Full forward bow | 3 s hold |
+| `cute` | Rear leg wiggle | 5 cycles |
+| `freaky` | Front arm flail | 3 cycles |
+| `worm` | Knee crawl alternation | 5 cycles |
+| `shake` | Rear leg shake | 5 cycles |
+| `shrug` | Knee-up shrug pose | 1.5 s hold |
+| `dead` | Collapse to flat | — |
+| `crab` | Crab walk side-step | 5 cycles |
+| `walk` | Forward trot gait | `--cycles` repeats |
+| `backward` | Backward trot gait | `--cycles` repeats |
+| `turn_left` | Left pivot | `--cycles` repeats |
+| `turn_right` | Right pivot | `--cycles` repeats |
+
+### Usage
+
+```bash
+# List available sequence names
+python sequences.py --list
+
+# Play a single named sequence
+python sequences.py --sequence stand
+python sequences.py --sequence walk
+python sequences.py --sequence dance --viewer native
+
+# Control walk/turn loop count (default 3)
+python sequences.py --sequence walk --cycles 5
+
+# Cycle through all 19 sequences in order
+python sequences.py
+```
+
+### Architecture
+
+`SequencePlayer` is a policy-compatible callable that steps through a list
+of `Keyframe` objects (each a complete 8-servo angle snapshot + duration in
+ms). It advances to the next keyframe when the current one expires, cycles
+indefinitely, and is passed directly to `ViserPlayViewer` or
+`NativeMujocoViewer` — the same viewer used by `validate.py` and `play.py`.
+
+The `_Builder` helper mirrors the firmware's stateful `setServoAngle` +
+`delayWithFace` pattern: servo state is cumulative across calls, and each
+`delay(ms)` snapshots the full 8-servo state into a `Keyframe`. Loop bodies
+are expanded inline to their firmware-specified repeat counts.
+
+---
 
 ## Running Experiments
 
@@ -156,7 +253,8 @@ This will show:
 
 ```
 sesameRL/
-├── validate.py        sanity check
+├── validate.py        sinusoidal joint drive — sanity check before training
+├── sequences.py       replay firmware gait sequences in simulation
 ├── config.py          all the configs, main place to edit
 ├── train.py           run for training
 ├── play.py            run for sandbox play
