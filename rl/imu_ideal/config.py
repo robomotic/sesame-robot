@@ -158,14 +158,14 @@ EVENTS = {
 # ---------------------------------------------------------------------------
 CURRICULUM_ENABLED = True
 COMMAND_CURRICULUM = [
-    # Stage 0: symmetric forward/backward only, narrow range. Easy warmup.
+    # Stage 0: forward/backward only, narrow range. Easy warmup.
     {"step":        0, "x_com": (-0.3, 0.3), "y_com": ( 0.0, 0.0), "z_com": ( 0.0, 0.0)},
-    # Stage 1: widen forward/backward.
+    # Stage 1: widen forward/backward. More time here before adding axes.
     {"step":   500*24, "x_com": (-0.5, 0.5), "y_com": ( 0.0, 0.0), "z_com": ( 0.0, 0.0)},
-    # Stage 2: add lateral strafe.
-    {"step":  1000*24, "x_com": (-0.5, 0.5), "y_com": (-0.3, 0.3), "z_com": ( 0.0, 0.0)},
-    # Stage 3: full symmetric 3-axis.
-    {"step":  1500*24, "x_com": (-0.5, 0.5), "y_com": (-0.3, 0.3), "z_com": (-1.0, 1.0)},
+    # Stage 2: add lateral strafe. Still no yaw — robot must learn straight walking first.
+    {"step":  2000*24, "x_com": (-0.5, 0.5), "y_com": (-0.3, 0.3), "z_com": ( 0.0, 0.0)},
+    # Stage 3: introduce gentle yaw. Capped at ±0.5 rad/s — realistic for MG90S legs.
+    {"step":  3500*24, "x_com": (-0.5, 0.5), "y_com": (-0.3, 0.3), "z_com": (-0.5, 0.5)},
 ]
 REL_STANDING_ENVS = 0.2
 
