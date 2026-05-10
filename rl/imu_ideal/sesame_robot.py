@@ -131,6 +131,7 @@ KNEE_ACTUATOR_CFG = _make_actuator_cfg(C.KNEE_JOINT_REGEX)
 
 INIT_STATE = EntityCfg.InitialStateCfg(
     pos=C.BASE_INIT_POS,
+    rot=C.BASE_INIT_ROT,
     joint_pos=dict(C.DEFAULT_JOINT_ANGLES),
     joint_vel={".*": 0.0},
 )

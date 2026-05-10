@@ -40,6 +40,9 @@ DEFAULT_JOINT_ANGLES = {
 }
 
 BASE_INIT_POS = (0.0, 0.0, 0.06)
+# 180° rotation around Z so body +X (velocity command forward) aligns with the
+# visual front of the Sesame model. Quaternion (w, x, y, z).
+BASE_INIT_ROT = (0.0, 0.0, 0.0, 1.0)
 
 # Actuator gains (PD servo per joint). effort/velocity limits come from the
 # URDF; stiffness/damping tuned so action_scale ~= 0.4 rad.
