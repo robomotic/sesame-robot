@@ -216,7 +216,7 @@ PPO = {
     "critic": {
         "hidden_dims": (256, 512, 256, 128),
         "activation": "elu",
-        "obs_normalization": False,
+        "obs_normalization": True,   # critic-only: prevents float32 overflow in deep net
     },
 }
 
