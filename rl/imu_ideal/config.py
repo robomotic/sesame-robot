@@ -93,7 +93,7 @@ OBS_BASE_LIN_VEL_ENABLED: bool = True
 IMU_NOISE_ENABLED: bool = True
 IMU_GYRO_NOISE_STD: float = 0.005    # rad/s
 IMU_ACCEL_NOISE_STD: float = 0.004   # dimensionless (0.05 m/s² / 9.81 ≈ 0.005)
-IMU_LIN_VEL_NOISE_STD: float = 0.2   # m/s; models accelerometer-integration drift
+IMU_LIN_VEL_NOISE_STD: float = 0.05  # m/s; models accelerometer-integration drift (was 0.2 — 40% of cmd range degraded SNR)
 
 
 # ---------------------------------------------------------------------------
@@ -201,10 +201,10 @@ PPO = {
         "max_grad_norm": 1.0,
     },
 
-    # Actor runs on the ESP32: (64,128,64) → ~19k params, ~75 KB (fits internal SRAM).
+    # Actor runs on the ESP32: (128,128,64) → ~45k params, ~180 KB (fits 4MB PSRAM).
     # Critic is training-only: kept larger for better value estimation.
     "actor": {
-        "hidden_dims": (64, 128, 64),
+        "hidden_dims": (128, 128, 64),
         "activation": "elu",
         "obs_normalization": False,
         "distribution_cfg": {
